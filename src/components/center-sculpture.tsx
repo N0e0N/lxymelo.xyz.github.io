@@ -5,6 +5,7 @@ import type { MutableRefObject } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { withBase } from "../lib/base";
 
 export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject<number> }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -56,7 +57,7 @@ export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(host);
 
-    new GLTFLoader().load("/models/silver-sculpture.glb", (gltf) => {
+    new GLTFLoader().load(withBase("/models/silver-sculpture.glb"), (gltf) => {
       model = gltf.scene;
       const silver = new THREE.MeshPhysicalMaterial({
         color: 0xdce2eb,

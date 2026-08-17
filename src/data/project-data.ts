@@ -1,3 +1,5 @@
+import { withBase } from "../lib/base";
+
 export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string };
 
 export type AIProject = {
@@ -16,7 +18,7 @@ export type AIProject = {
 const images = (folder: string, count: number, label: string): ProjectMedia[] =>
   Array.from({ length: count }, (_, index) => ({ src: `/projects/${folder}/${String(index + 1).padStart(2, "0")}.jpg`, alt: `${label} ${index + 1}` }));
 
-export const projects: Record<string, AIProject> = {
+const rawProjects: Record<string, AIProject> = {
   "research-agent": {
     slug: "research-agent",
     title: "设计学术科研智能体",
@@ -84,3 +86,15 @@ export const projects: Record<string, AIProject> = {
     next: "research-agent",
   },
 };
+
+// 统一补上部署子路径（base 为 "/" 时 withBase 原样返回）
+export const projects: Record<string, AIProject> = Object.fromEntries(
+  Object.entries(rawProjects).map(([key, p]) => [
+    key,
+    {
+      ...p,
+      cover: withBase(p.cover),
+      media: p.media.map((m) => ({ ...m, src: withBase(m.src) })),
+    },
+  ]),
+);

@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import RiseLink from "../components/rise-link";
 import CenterSculpture from "../components/center-sculpture";
+import { withBase } from "../lib/base";
 
 type Track = "all" | "builder" | "designer" | "player";
 
 const builderBase = [
-  { title: "科研智能体", type: "AI Agent", slug: "research-agent", art: "external", image: "/ai-builder/research-agent.jpg", position: "50% 48%", ratio: 0.75, width: 190 },
-  { title: "Design & AI Playbook", type: "AI Education", slug: "design-ai-playbook", art: "external", image: "/ai-builder/design-ai-playbook.jpg", position: "50% 50%", ratio: 0.75, width: 200 },
-  { title: "AI 教育创新研讨会", type: "Symposium", slug: "ai-education-symposium", art: "external", image: "/ai-builder/ai-education-symposium.jpg", position: "50% 50%", ratio: 0.75, width: 180 },
-  { title: "创客松 2.0", type: "AI Workshop", slug: "creatorthon", art: "external", image: "/ai-builder/creatorthon.jpg", position: "50% 52%", ratio: 0.75, width: 190 },
-  { title: "Echo Of", type: "AI Experience", slug: "echo-of", art: "external", image: "/ai-builder/echo-of.jpg", position: "50% 50%", ratio: 0.75, width: 175 },
+  { title: "科研智能体", type: "AI Agent", slug: "research-agent", art: "external", image: withBase("/ai-builder/research-agent.jpg"), position: "50% 48%", ratio: 0.75, width: 190 },
+  { title: "Design & AI Playbook", type: "AI Education", slug: "design-ai-playbook", art: "external", image: withBase("/ai-builder/design-ai-playbook.jpg"), position: "50% 50%", ratio: 0.75, width: 200 },
+  { title: "AI 教育创新研讨会", type: "Symposium", slug: "ai-education-symposium", art: "external", image: withBase("/ai-builder/ai-education-symposium.jpg"), position: "50% 50%", ratio: 0.75, width: 180 },
+  { title: "创客松 2.0", type: "AI Workshop", slug: "creatorthon", art: "external", image: withBase("/ai-builder/creatorthon.jpg"), position: "50% 52%", ratio: 0.75, width: 190 },
+  { title: "Echo Of", type: "AI Experience", slug: "echo-of", art: "external", image: withBase("/ai-builder/echo-of.jpg"), position: "50% 50%", ratio: 0.75, width: 175 },
 ];
 
 const allWorks = Array.from({ length: 15 }, (_, index) => {
@@ -20,7 +21,7 @@ const allWorks = Array.from({ length: 15 }, (_, index) => {
     ...work,
     id: `builder-${index}`,
     category: "builder" as const,
-    link: `/projects/${work.slug}`,
+    link: withBase(`/projects/${work.slug}`),
     ratio: 0.75,
     width: work.width * (0.7 + (index % 4) * 0.055),
   };
@@ -327,7 +328,7 @@ export default function Home() {
 
   return (
     <main className={`spiral-app track-${track}`} ref={sceneRef}>
-      <video className="cloud-background" src="/backgrounds/clouds-glitch.mp4" autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
+      <video className="cloud-background" src={withBase("/backgrounds/clouds-glitch.mp4")} autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
       <div className="track-wash" aria-hidden="true" />
       <canvas className="grid-room" ref={gridRef} aria-hidden="true" />
 
@@ -335,7 +336,7 @@ export default function Home() {
         <a className="k95-logo" href="#" aria-label="LXY.MELO home">LXY.MELO</a>
         <nav aria-label="Primary navigation">
           <a href="#work">WORK</a>
-          <RiseLink href="/about" panel="about">ABOUT ME</RiseLink>
+          <RiseLink href={withBase("/about")} panel="about">ABOUT ME</RiseLink>
         </nav>
       </header>
 
