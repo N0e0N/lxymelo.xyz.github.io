@@ -8,7 +8,7 @@ export default function AIProjectPage({ project }: { project: AIProject }) {
     <main className="ai-detail">
       <header className="ai-detail-nav">
         <RiseLink className="ai-detail-logo" href={withBase("/")} panel="work" ariaLabel="Back to work">LXY.MELO</RiseLink>
-        <nav><RiseLink href={withBase("/")} panel="work">WORK</RiseLink><RiseLink href={withBase("/about")} panel="about">ABOUT ME</RiseLink></nav>
+        <nav><RiseLink href={withBase("/")} panel="work">WORK</RiseLink><RiseLink href={withBase("/about/")} panel="about">ABOUT ME</RiseLink></nav>
       </header>
 
       <section className="ai-detail-hero">
@@ -34,7 +34,7 @@ export default function AIProjectPage({ project }: { project: AIProject }) {
         ))}
       </section>
 
-      <a className="ai-detail-next" href={withBase(`/projects/${next.slug}`)}>
+      <a className="ai-detail-next" href={withBase(`/projects/${next.slug}/`)}>
         <div><small>NEXT PROJECT</small><h2>{next.title}</h2></div>
         <figure><img src={next.cover} alt={next.title} /></figure>
         <span>VIEW ↗</span>

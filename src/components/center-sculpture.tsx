@@ -50,6 +50,7 @@ export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject
       scene.add(group);
       let model: THREE.Object3D | null = null;
       let animationFrame = 0;
+      let lastSpin = spinRef.current;
 
       const resize = () => {
         const width = Math.max(1, host.clientWidth);
@@ -93,20 +94,40 @@ export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject
         model.scale.setScalar(scale);
         group.add(model);
         host.classList.add("is-loaded");
+        // 模型加载完成后设置初始角度并渲染首帧
+        group.rotation.y = spinRef.current;
+        group.rotation.x = -0.08 + Math.sin(spinRef.current * 0.45) * 0.035;
+        renderer.render(scene, camera);
       });
 
       const render = () => {
         if (!running) return;
-        group.rotation.y += (spinRef.current - group.rotation.y) * 0.055;
-        group.rotation.x = -0.08 + Math.sin(spinRef.current * 0.45) * 0.035;
-        renderer.render(scene, camera);
+        // 关键优化：只在旋转角度发生"明显"变化时渲染一帧。
+        // 首页主循环每帧都会写入 spinRef（含极慢的漂移量），若每次都渲染
+        // 会变成每帧全量渲染 11MB 模型，占满主线程导致切换卡死。
+        // 阈值 0.0015 弧度：滚动/交互驱动的旋转远超此值照常渲染，
+        // 肉眼不可见的静止漂移则跳过，渲染开销趋近于零。
+        if (model && !document.hidden && Math.abs(spinRef.current - lastSpin) > 0.0015) {
+          lastSpin = spinRef.current;
+          group.rotation.y += (lastSpin - group.rotation.y) * 0.055;
+          group.rotation.x = -0.08 + Math.sin(lastSpin * 0.45) * 0.035;
+          renderer.render(scene, camera);
+        }
         animationFrame = window.requestAnimationFrame(render);
       };
+
       animationFrame = window.requestAnimationFrame(render);
+
+      // 切回页面时补一帧，避免画面停留在旧角度
+      const onVisibility = () => {
+        if (!document.hidden && model && running) renderer.render(scene, camera);
+      };
+      document.addEventListener("visibilitychange", onVisibility);
 
       cleanup = () => {
         running = false;
         window.cancelAnimationFrame(animationFrame);
+        document.removeEventListener("visibilitychange", onVisibility);
         resizeObserver.disconnect();
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
@@ -117,6 +138,10 @@ export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject
         });
         environmentMap.dispose();
         pmrem.dispose();
+        // 关键：THREE 的 dispose 不释放 WebGL context，必须手动 lose，
+        // 否则反复切换页面会耗尽 Chrome 的 context 上限，导致新页面
+        // WebGL 初始化阻塞主线程（表现为切换后页面卡死）
+        renderer.getContext().getExtension("WEBGL_lose_context")?.loseContext();
         renderer.dispose();
         renderer.domElement.remove();
       };

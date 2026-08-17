@@ -21,7 +21,7 @@ const allWorks = Array.from({ length: 15 }, (_, index) => {
     ...work,
     id: `builder-${index}`,
     category: "builder" as const,
-    link: withBase(`/projects/${work.slug}`),
+    link: withBase(`/projects/${work.slug}/`),
     ratio: 0.75,
     width: work.width * (0.7 + (index % 4) * 0.055),
   };
@@ -103,9 +103,18 @@ export default function Home() {
     startIntro();
     window.addEventListener("pageshow", onPageShow);
 
+    // 页面切走/后台时暂停背景视频解码，切回再恢复，避免与下一页抢 CPU
+    const onVisibility = () => {
+      const video = scene.querySelector<HTMLVideoElement>(".cloud-background");
+      if (document.hidden) video?.pause();
+      else video?.play().catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
@@ -118,6 +127,7 @@ export default function Home() {
     let curveSpeed = 0;
     let touchY = 0;
     let frame = 0;
+    let frameSkip = 0;
     let running = true;
     let gridPhase = 0;
     let gridSpeed = 0.000025;
@@ -160,6 +170,11 @@ export default function Home() {
 
     const render = (time: number) => {
       if (!running) return;
+      if (document.hidden || frameSkip++ % 2 !== 0) {
+        // 页面切走/后台时暂停；可见时降到 30fps（delta 按真实时间累加，速度不变）
+        frame = window.requestAnimationFrame(render);
+        return;
+      }
       const deltaTime = previousTime ? Math.min(32, time - previousTime) : 16;
       previousTime = time;
 
@@ -336,7 +351,7 @@ export default function Home() {
         <a className="k95-logo" href="#" aria-label="LXY.MELO home">LXY.MELO</a>
         <nav aria-label="Primary navigation">
           <a href="#work">WORK</a>
-          <RiseLink href={withBase("/about")} panel="about">ABOUT ME</RiseLink>
+          <RiseLink href={withBase("/about/")} panel="about">ABOUT ME</RiseLink>
         </nav>
       </header>
 
@@ -392,7 +407,15 @@ export default function Home() {
                   cover.style.height = `${targetHeight}px`;
                 });
 
-                window.setTimeout(() => window.location.assign(work.link), 760);
+                // 卡片展开动画 0.76s，结束后立即跳转；transitionend 丢失时 1.2s 兜底
+                let navigated = false;
+                const navigate = () => {
+                  if (navigated) return;
+                  navigated = true;
+                  window.location.assign(work.link);
+                };
+                cover.addEventListener("transitionend", navigate);
+                window.setTimeout(navigate, 1200);
               }}
             >
               <span

@@ -35,7 +35,16 @@ export default function RiseLink({
     document.body.appendChild(transition);
     transition.getBoundingClientRect();
     transition.classList.add("is-active");
-    window.setTimeout(() => window.location.assign(href), 760);
+    // 动画结束立即跳转；若 transitionend 因主线程繁忙/事件丢失未触发，
+    // 1.2s 兜底强制跳转，保证切换永不卡死
+    let navigated = false;
+    const navigate = () => {
+      if (navigated) return;
+      navigated = true;
+      window.location.assign(href);
+    };
+    transition.addEventListener("transitionend", navigate);
+    window.setTimeout(navigate, 1200);
   };
 
   return <a href={href} className={className} aria-label={ariaLabel} onClick={onClick}>{children}</a>;

@@ -29,7 +29,7 @@ button { font: inherit; }
 .page-transition-cover { position: fixed; z-index: 10000; margin: 0; overflow: hidden; background-color: #171719; background-size: cover; background-repeat: no-repeat; transform: translateZ(0); box-shadow: 0 30px 90px rgba(0,0,0,.18); pointer-events: none; will-change: left, top, width, height; transition: left .76s cubic-bezier(.76,0,.24,1), top .76s cubic-bezier(.76,0,.24,1), width .76s cubic-bezier(.76,0,.24,1), height .76s cubic-bezier(.76,0,.24,1), box-shadow .76s ease; }
 .route-rise-panel { position: fixed; z-index: 20000; inset: 0; transform: translate3d(0,100%,0); pointer-events: none; will-change: transform; transition: transform .76s cubic-bezier(.76,0,.24,1); }
 .route-rise-panel.is-active { transform: translate3d(0,0,0); }
-.route-rise-about { background: #58a9dc url("/about/about-me.png") center / cover no-repeat; }
+.route-rise-about { background: #58a9dc url("/about/about-me.jpg") center / cover no-repeat; }
 .route-rise-work { background: var(--blue); }
 .grid-room { position: absolute; z-index: 2; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 1.15s cubic-bezier(.22,1,.36,1); }
 .spiral-app.intro-grid .grid-room { opacity: .9; }
