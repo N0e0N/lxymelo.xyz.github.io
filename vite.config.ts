@@ -18,9 +18,8 @@ const projectInputs = projectSlugs.reduce<Record<string, string>>((acc, slug) =>
 
 export default defineConfig({
   plugins: [react()],
-  // 部署在项目仓库子路径下：https://n0e0n.github.io/lxymelo.xyz.github.io/
-  // 若以后改绑自定义域名 lxymelo.xyz（根路径访问），把 base 改回 "/" 即可
-  base: "/lxymelo.xyz.github.io/",
+  // 自定义域名 www.lxymelo.xyz 根路径访问
+  base: "/",
   server: {
     port: 3000,
     host: true,
