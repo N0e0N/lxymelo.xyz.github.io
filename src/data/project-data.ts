@@ -19,6 +19,21 @@ const images = (folder: string, count: number, label: string): ProjectMedia[] =>
   Array.from({ length: count }, (_, index) => ({ src: `/projects/${folder}/${String(index + 1).padStart(2, "0")}.jpg`, alt: `${label} ${index + 1}` }));
 
 const rawProjects: Record<string, AIProject> = {
+  moocer: {
+    slug: "moocer",
+    title: "MOOCER",
+    kicker: "AI BUILDER / COURSE STUDIO",
+    year: "2026",
+    cover: "/ai-builder/moocer.jpg",
+    summary: "面向课程创作者的一站式 AI 慕课制作工作台：从课件与课纲出发，完成课程规划、逐页口播、AI 配音或本人录音、课程预览与 MP4 成片导出。",
+    roles: ["AI Product", "Education Workflow", "Multimodal Agent"],
+    media: [
+      { src: "/projects/moocer/01.png", alt: "MOOCER 课程创建与项目工作台" },
+      { src: "/projects/moocer/02.png", alt: "MOOCER 逐页口播与音频制作界面" },
+      { src: "/projects/moocer/03.png", alt: "MOOCER 慕课成片预览与下载界面" },
+    ],
+    next: "research-agent",
+  },
   "research-agent": {
     slug: "research-agent",
     title: "设计学术科研智能体",
@@ -83,7 +98,7 @@ const rawProjects: Record<string, AIProject> = {
     summary: "融合音乐、空间与叙事的 AI 创意工作流：分析歌曲特征，生成场景提示，并驱动 Blender 构建属于每首歌的等距精神空间。",
     roles: ["AI Workflow", "Music Analysis", "3D Experience"],
     media: [{ src: "/projects/echo-of/demo.mp4", type: "video", alt: "Echo Of 演示视频" }],
-    next: "research-agent",
+    next: "moocer",
   },
 };
 

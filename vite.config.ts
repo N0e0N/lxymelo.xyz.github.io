@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
 const projectSlugs = [
+  "moocer",
   "research-agent",
   "design-ai-playbook",
   "ai-education-symposium",

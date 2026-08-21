@@ -19,6 +19,7 @@ npm run preview    # 本地预览构建产物
 | --- | --- |
 | `/` | 首页：螺旋式作品展示（Three.js 3D 雕塑 + Canvas 网格 + 视频背景） |
 | `/about/` | 关于页 |
+| `/projects/moocer/` | MOOCER — AI 慕课制作工作台 |
 | `/projects/research-agent/` | 设计学术科研智能体 |
 | `/projects/design-ai-playbook/` | Design & AI Playbook |
 | `/projects/ai-education-symposium/` | 设计人工智能教育创新研讨会 |

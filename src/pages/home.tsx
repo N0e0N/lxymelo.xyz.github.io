@@ -8,6 +8,7 @@ import { withBase } from "../lib/base";
 type Track = "all" | "builder" | "designer" | "player";
 
 const builderBase = [
+  { title: "MOOCER", type: "AI Course Studio", slug: "moocer", art: "external", image: withBase("/ai-builder/moocer.jpg"), position: "50% 50%", ratio: 0.75, width: 190 },
   { title: "科研智能体", type: "AI Agent", slug: "research-agent", art: "external", image: withBase("/ai-builder/research-agent.jpg"), position: "50% 48%", ratio: 0.75, width: 190 },
   { title: "Design & AI Playbook", type: "AI Education", slug: "design-ai-playbook", art: "external", image: withBase("/ai-builder/design-ai-playbook.jpg"), position: "50% 50%", ratio: 0.75, width: 200 },
   { title: "AI 教育创新研讨会", type: "Symposium", slug: "ai-education-symposium", art: "external", image: withBase("/ai-builder/ai-education-symposium.jpg"), position: "50% 50%", ratio: 0.75, width: 180 },
@@ -15,7 +16,7 @@ const builderBase = [
   { title: "Echo Of", type: "AI Experience", slug: "echo-of", art: "external", image: withBase("/ai-builder/echo-of.jpg"), position: "50% 50%", ratio: 0.75, width: 175 },
 ];
 
-const allWorks = Array.from({ length: 15 }, (_, index) => {
+const allWorks = Array.from({ length: 18 }, (_, index) => {
   const work = builderBase[index % builderBase.length];
   return {
     ...work,
@@ -348,7 +349,7 @@ export default function Home() {
       <canvas className="grid-room" ref={gridRef} aria-hidden="true" />
 
       <header className="k95-header">
-        <a className="k95-logo" href="#" aria-label="LXY.MELO home">LXY.MELO</a>
+        <a className="k95-logo" href={withBase("/")} aria-label="LXY.MELO home">LXY.MELO</a>
         <nav aria-label="Primary navigation">
           <a href="#work">WORK</a>
           <RiseLink href={withBase("/about/")} panel="about">ABOUT ME</RiseLink>
@@ -445,7 +446,7 @@ export default function Home() {
 
       <div className="view-switch" role="group" aria-label="Creative profile">
         <button className={track === "all" ? "active" : ""} onClick={() => selectTrack("all")} type="button">ALL</button>
-        <button className={track === "builder" ? "active" : ""} onClick={() => selectTrack("builder")} type="button">AI BUIDER</button>
+        <button className={track === "builder" ? "active" : ""} onClick={() => selectTrack("builder")} type="button">AI BUILDER</button>
         <button className={track === "designer" ? "active" : ""} onClick={() => selectTrack("designer")} type="button">DESIGN</button>
         <button className={track === "player" ? "active" : ""} onClick={() => selectTrack("player")} type="button">ART</button>
       </div>

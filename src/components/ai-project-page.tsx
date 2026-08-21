@@ -28,6 +28,8 @@ export default function AIProjectPage({ project }: { project: AIProject }) {
         {project.media.map((item, index) => (
           <figure className={project.slug === "design-ai-playbook" ? "episode" : index % 5 === 0 || item.type === "video" ? "wide" : "half"} key={item.src}>
             {item.type === "video"
+              // Project demos are visual reels without spoken narration.
+              // eslint-disable-next-line jsx-a11y/media-has-caption
               ? <video src={item.src} controls playsInline preload="metadata" aria-label={item.alt} />
               : <img src={item.src} alt={item.alt} loading={index > 1 ? "lazy" : "eager"} />}
           </figure>
