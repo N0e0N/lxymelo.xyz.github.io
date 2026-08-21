@@ -18,6 +18,7 @@ const builderBase = [
 
 const designerBase = [
   { title: "负空间", type: "Interaction Design", slug: "negative-space", art: "external", image: withBase("/designer/negative-space.jpg"), position: "50% 50%", ratio: 0.75, width: 190 },
+  { title: "特种车避让 HMI", type: "Automotive HMI", slug: "special-vehicle-hmi", art: "external", image: withBase("/designer/special-vehicle-hmi.jpg"), position: "50% 50%", ratio: 0.75, width: 188 },
 ];
 
 const portfolioBase = [

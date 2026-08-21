@@ -20,6 +20,7 @@ npm run preview    # 本地预览构建产物
 | `/` | 首页：螺旋式作品展示（Three.js 3D 雕塑 + Canvas 网格 + 视频背景） |
 | `/about/` | 关于页 |
 | `/projects/negative-space/` | 负空间 — OPPO Find N 折叠屏交互概念 |
+| `/projects/special-vehicle-hmi/` | 特种车避让 HMI — 车载双屏避让引导概念 |
 | `/projects/moocer/` | MOOCER — AI 慕课制作工作台 |
 | `/projects/research-agent/` | 设计学术科研智能体 |
 | `/projects/design-ai-playbook/` | Design & AI Playbook |

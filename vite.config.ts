@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const projectSlugs = [
   "negative-space",
+  "special-vehicle-hmi",
   "moocer",
   "research-agent",
   "design-ai-playbook",
