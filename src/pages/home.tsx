@@ -16,12 +16,20 @@ const builderBase = [
   { title: "Echo Of", type: "AI Experience", slug: "echo-of", art: "external", image: withBase("/ai-builder/echo-of.jpg"), position: "50% 50%", ratio: 0.75, width: 175 },
 ];
 
-const allWorks = Array.from({ length: 18 }, (_, index) => {
-  const work = builderBase[index % builderBase.length];
+const designerBase = [
+  { title: "负空间", type: "Interaction Design", slug: "negative-space", art: "external", image: withBase("/designer/negative-space.jpg"), position: "50% 50%", ratio: 0.75, width: 190 },
+];
+
+const portfolioBase = [
+  ...builderBase.map((work) => ({ ...work, category: "builder" as const })),
+  ...designerBase.map((work) => ({ ...work, category: "designer" as const })),
+];
+
+const allWorks = Array.from({ length: portfolioBase.length * 3 }, (_, index) => {
+  const work = portfolioBase[index % portfolioBase.length];
   return {
     ...work,
-    id: `builder-${index}`,
-    category: "builder" as const,
+    id: `${work.category}-${index}`,
     link: withBase(`/projects/${work.slug}/`),
     ratio: 0.75,
     width: work.width * (0.7 + (index % 4) * 0.055),
@@ -95,7 +103,7 @@ export default function Home() {
       if (event.persisted) startIntro();
     };
 
-    builderBase.forEach((work) => {
+    portfolioBase.forEach((work) => {
       const image = new Image();
       image.decoding = "async";
       image.src = work.image;
