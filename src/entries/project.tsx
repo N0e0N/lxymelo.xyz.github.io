@@ -4,7 +4,7 @@ import { projects } from "../data/project-data";
 import "../styles/globals.css";
 
 // 从 URL /projects/<slug>/ 解析当前项目
-const match = window.location.pathname.match(/\/projects\/([^/]+)\/?$/);
+const match = window.location.pathname.match(/\/projects\/([^/]+)(?:\/index\.html|\/)?$/);
 const slug = match ? match[1] : "research-agent";
 const project = projects[slug] ?? projects["research-agent"];
 

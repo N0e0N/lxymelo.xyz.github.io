@@ -47,7 +47,7 @@ const MICRO = {
 
 // A project page carries up to this many pictures and clips, each in a box
 // of one of three proportions.
-const MEDIA_MAX = 6;
+const MEDIA_MAX = Math.max(...PROJECTS.map((project) => project.media.length));
 
 // The page's rhythm, read off the shapes in order: landscapes alternate a
 // large picture on the right with a smaller one on the left, portraits make
@@ -569,7 +569,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const cell = detailCell;
       const project = PROJECTS[cell];
       const heroAspect = mediaAspects.get(project?.video) ?? mediaAspects.get(project?.file) ?? params.planeAspect;
-      const h = Math.min((stacked ? w : w * 0.44) / heroAspect, viewH * 0.72);
+      const h = Math.min((stacked ? w : w * 0.44) / heroAspect, viewH * (viewW <= 640 ? 0.52 : 0.72));
       const heroW = h * heroAspect;
       openRect.w = heroW;
       openRect.h = h;
@@ -610,7 +610,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       if (title && !title.hidden && title.left + title.w + 24 < left) {
         top = title.top + title.h * 0.5 - size * 0.5;
       }
-      overlay.style.setProperty("--y-close", `${top}px`);
+      overlay.style.setProperty("--y-close", viewW <= 640
+        ? `max(76px, calc(env(safe-area-inset-top) + 64px))`
+        : `${top}px`);
     };
 
     // Re-measuring keeps what has already been revealed: a resize should not
@@ -789,7 +791,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         if (!box) continue;
         const aspect = Number(box.style.aspectRatio);
         if (aspect > 0) {
-          box.style.maxWidth = `${viewH * 0.78 * aspect}px`;
+          box.style.maxWidth = viewW <= 640 ? "100%" : `${viewH * 0.78 * aspect}px`;
           box.style.width = "100%";
           box.style.justifySelf = "center";
         }
@@ -810,7 +812,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         // A reading floor: in vw alone the facts and insights were 10px on
         // a phone.
         "--t-name": `max(15px, ${params.nameSize * textK}vw)`,
-        "--t-small": `${params.idxSize * textK}vw`,
+        "--t-small": `max(12px, ${params.idxSize * textK}vw)`,
         "--t-list": `${params.listSize * textK}vw`,
         // Reading sizes, with floors: on a phone the vw alone falls under them.
         "--t-lead": `max(19px, ${params.openLead * textK}vw)`,
@@ -1212,7 +1214,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const gen = ++footage.gen;
       footage.ready = false;
       if (!clip || liveRefused.has(clip.src)) return;
-      liveEl.src = `/${clip.src}`;
+      liveEl.src = clip.src;
       // Ready means a frame has been presented, not that play() resolved: a
       // texture bound before then has nothing to upload.
       const ready = () => {
@@ -1366,6 +1368,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       detailCell = cell;
       const p = PROJECTS[cell];
       if (!p) return;
+      document.title = `${p.name} — LXY.MELO`;
       const els = openTextRef.current;
       fillVideo(els.heroVideo, p.video, p.file, p.name);
       const idx = (c) => String(c + 1).padStart(2, "0");
@@ -1558,6 +1561,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           overlay.style.pointerEvents = "none";
           overlay.scrollTop = 0;
           closeEl?.blur();
+          document.getElementById("main-content")?.focus({ preventScroll: true });
           if (liveRef.current) liveRef.current.textContent = "Closed.";
           paintCursor();
         },
@@ -1690,23 +1694,33 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     // 切换 replaceState，关闭回到首页地址；浏览器后退关闭覆盖层。
     let urlSynced = false;
     const homeUrl = withBase("/");
+    const homeTitle = document.title;
     const syncUrl = (slug, push) => {
       if (!slug) return;
       const url = withBase(`/projects/${slug}/`);
       try {
-        if (push && !urlSynced) window.history.pushState({ ring: true }, "", url);
-        else window.history.replaceState({ ring: true }, "", url);
+        if (push && !urlSynced) window.history.pushState({ ring: true, slug }, "", url);
+        else window.history.replaceState({ ring: true, slug }, "", url);
         urlSynced = true;
       } catch { /* 本地 file:// 等场景忽略 */ }
     };
     const restoreUrl = () => {
       if (!urlSynced) return;
       urlSynced = false;
+      document.title = homeTitle;
       try { window.history.replaceState(null, "", homeUrl); } catch { /* noop */ }
     };
-    const onPopState = () => {
+    const onPopState = (event) => {
+      const cell = PROJECTS.findIndex((project) => project.slug === event.state?.slug);
+      if (event.state?.ring && cell >= 0) {
+        urlSynced = true;
+        if (openI < 0) openProject(planeOf(cell));
+        else if (detailCell !== cell) advanceTo(cell);
+        return;
+      }
       if (openI >= 0) {
         urlSynced = false;
+        document.title = homeTitle;
         closeProject();
       }
     };
@@ -1788,6 +1802,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     const onNext = (e) => {
       // 覆盖层内的“下一项目”留在覆盖层内切换，保持与首次进入一致的排版；
       // href 仍指向独立页，供新标签页/中键打开。
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       const cell = Number(openTextRef.current.next?.dataset.cell ?? -1);
       if (cell >= 0) advanceTo(cell);
@@ -3260,8 +3275,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // the merge reads as a different material at a different window size.
       // The open softens the field and ripples the surface for as long as its
       // threads are in play, so the ring parts like something liquid.
-      // An advance draws two pages' pictures past each other; they keep their
-      // edges on the way rather than melting together.
+      // Keep the page's edges distinct throughout the project crossfade.
       // A phone's card grows further than the reference window's on the way
       // to rest, so its goo grows with it, or the ring would settle stiffer
       // there than anywhere else.
@@ -3271,7 +3285,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       uniforms.uK.value =
         (params.goo * planeK * fit * gooK +
           params.openMelt * fit * pulse * openOut) *
-        (advancing ? 1 - 0.9 * smoothstep(0, 0.15, advQ) : 1);
+        (advancing ? 0.1 : 1);
       uniforms.uWobble.value =
         params.wobble * fit * (1 - smoothstep(0.2, 0.95, state.progress)) +
         params.openWobble * fit * pulse;
@@ -3282,7 +3296,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       uniforms.uTextured.value = params.textured && firstIn ? 1 : 0;
       uniforms.uBlend.value = Math.max(0.5, params.blend * planeK * g);
 
-      const on = params.glass;
+      // 手机详情优先保证正文可读，关闭屏幕边缘的玻璃折射。
+      const on = params.glass && !(viewW <= 640 && openI >= 0);
       uniforms.uBandTop.value = on ? params.bandTop * viewH : 0;
       uniforms.uBandBottom.value = on ? params.bandBottom * viewH : 0;
       uniforms.uGlass.value.set(
@@ -3882,7 +3897,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         role="dialog"
         aria-hidden="true"
         inert
-        className="pointer-events-none fixed inset-0 z-20 overflow-y-auto overscroll-contain text-(--ink) [scrollbar-width:none]"
+        className="project-overlay pointer-events-none fixed inset-0 z-20 overflow-y-auto overscroll-contain text-(--ink) [scrollbar-width:none]"
       >
         <article
           className="relative"
@@ -4080,7 +4095,19 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         {/* Close: a disc of the page's own colour with a hairline ring and a
             cross, styled in globals.css. Drawn in by the open timeline.
             Fixed, so it stays put while the page scrolls under it. */}
-
+        <button
+          ref={closeRef}
+          type="button"
+          className="close fixed z-30"
+          aria-label="关闭项目"
+          style={{ top: "var(--y-close)", right: "var(--x-mr)" }}
+        >
+          <span className="close-disc" aria-hidden="true" />
+          <span className="close-x" aria-hidden="true">
+            <span className="close-stroke" />
+            <span className="close-stroke" />
+          </span>
+        </button>
       </div>
 
       {/* 001 to 100. Holds the entry at the seed until it gets there. */}

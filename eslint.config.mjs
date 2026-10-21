@@ -11,16 +11,17 @@ const eslintConfig = defineConfig([
     "dist/**",
     "out/**",
     "build/**",
-    // 移植的 WebGL 机器（参考站原样代码，非本站维护范围）
-    "src/carousel/**",
   ]),
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  react.configs.flat.recommended,
-  react.configs.flat["jsx-runtime"],
-  reactHooks.configs.flat["recommended-latest"],
-  jsxA11y.flatConfigs.recommended,
   {
+    ignores: ["src/carousel/**"],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommended,
+      react.configs.flat.recommended,
+      react.configs.flat["jsx-runtime"],
+      reactHooks.configs.flat["recommended-latest"],
+      jsxA11y.flatConfigs.recommended,
+    ],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -33,6 +34,15 @@ const eslintConfig = defineConfig([
         version: "detect",
       },
     },
+  },
+  {
+    // 动画代码也检查未定义变量，避免仅在交互时触发运行时崩溃。
+    files: ["src/carousel/**/*.{js,jsx}"],
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: { "no-undef": "error" },
   },
 ]);
 

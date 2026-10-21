@@ -90,8 +90,8 @@ const ringProjects = RING_ORDER.map((slug) => {
         src: isVideo ? p.cover : m.src,
         shape: isVideo ? "wide" : SHAPE_OVERRIDES[m.src] ?? "land",
         caption: m.alt,
-        // liveStart 播放时会补 "/" 前缀，这里去掉开头的斜杠
-        ...(isVideo ? { video: m.src.replace(/^\//, "") } : {}),
+        // 与图片一样保留根路径，避免 pushState 后按项目目录解析。
+        ...(isVideo ? { video: m.src } : {}),
       };
     }),
   };

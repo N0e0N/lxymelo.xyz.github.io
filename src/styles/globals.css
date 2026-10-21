@@ -774,3 +774,58 @@ html[data-keys] .close:focus-visible {
   .mpa-header .site-nav { gap: 1rem; font-size: 0.72rem; }
 }
 
+
+/* 触屏入口和手机阅读布局，与圆环的 640px 断点保持一致。 */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+img, video { max-width: 100%; }
+button, a { touch-action: manipulation; }
+.home-touch-hint { display: none; }
+.home-help > .site-control:last-child { margin-left: auto; min-height: 44px; padding: 0.5rem 0.75rem; }
+.project-index-dialog { margin: auto; overscroll-behavior: contain; }
+.project-index-heading .site-control { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+.project-index-list a > span { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .mpa-header {
+    padding: calc(env(safe-area-inset-top) + 8px) max(20px, env(safe-area-inset-right)) 8px max(20px, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+  }
+  .mpa-header .site-nav { font-size: 12px; gap: 12px; }
+  .mpa-header .site-nav a { padding-inline: 4px; }
+  .mpa-logo { font-size: 15px; }
+  .mpa-main {
+    padding: calc(env(safe-area-inset-top) + 88px) max(20px, env(safe-area-inset-right)) 48px max(20px, env(safe-area-inset-left));
+  }
+  .mpa-title { font-size: clamp(28px, 8vw, 38px); line-height: 1.25; margin-bottom: 20px; }
+  .mpa-kicker { font-size: 11px; line-height: 1.6; letter-spacing: 0.08em; }
+  .mpa-project-year { font-size: 11px; line-height: 1.7; letter-spacing: 0.04em; }
+  .mpa-project-hero, .mpa-about { gap: 28px; }
+  .mpa-prose, .mpa-project-summary { font-size: 16px; line-height: 1.9; }
+  .mpa-roles { margin: 20px 0 24px; gap: 8px; }
+  .mpa-roles li, .open-role { font-size: 12px; letter-spacing: 0; padding: 8px 12px; }
+  .mpa-project-cover img { max-height: 58svh; }
+  .mpa-fig img { width: 100%; max-height: none; }
+  .mpa-gallery { gap: 24px; }
+  .mpa-button, .open-link { min-height: 44px; max-width: 100%; flex-wrap: wrap; font-size: 12px; padding: 10px 16px; }
+  .mpa-next { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 16px; padding: 20px; border-radius: 12px; }
+  .mpa-next > div { grid-column: 1; }
+  .mpa-next-title { font-size: 21px; line-height: 1.35; }
+  .mpa-next img { grid-column: 2; grid-row: 1 / span 2; width: 76px; height: 96px; }
+  .mpa-next-cta { margin-left: 0; font-size: 12px; }
+  .project-overlay { scroll-padding-top: calc(env(safe-area-inset-top) + 128px); padding-bottom: calc(env(safe-area-inset-bottom) + 32px); }
+  .project-overlay .open-facts dl { gap: 12px; }
+  .project-overlay .open-facts dd { overflow-wrap: anywhere; }
+  .project-overlay .detail-video { max-height: 64svh; }
+  .project-overlay .media-fig + .media-fig { margin-top: 32px; }
+  .project-overlay .close { right: max(20px, env(safe-area-inset-right)) !important; }
+  .open-links { gap: 10px; }
+  .home-help { left: max(20px, env(safe-area-inset-left)); right: max(20px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom) + 16px); align-items: center; font-size: 12px; }
+  .home-help .home-touch-hint { display: block; max-width: 60%; font-size: 11px; line-height: 1.7; }
+  .home-help > .site-control { min-height: 44px; padding: 8px 12px; }
+  .project-index-dialog { width: calc(100% - 32px); max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 48px); padding: 20px; border-radius: 12px; }
+  .project-index-heading h2 { font-size: 26px; }
+  .project-index-list strong { font-size: 16px; line-height: 1.5; }
+  .project-index-list small { font-size: 11px; line-height: 1.6; }
+  .mpa-footer { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); line-height: 1.8; }
+  .mpa-footer a { display: inline-flex; min-height: 44px; align-items: center; }
+}
