@@ -1,6 +1,7 @@
 import { withBase } from "../lib/base";
+import { projectStories, notesForMedia, type ProjectInsight, type MediaNote } from "./project-stories";
 
-export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string };
+export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string; notes?: ProjectInsight[] } & Partial<MediaNote>;
 
 export type AIProject = {
   slug: string;
@@ -10,6 +11,7 @@ export type AIProject = {
   cover: string;
   summary: string;
   roles: string[];
+  insights?: ProjectInsight[];
   media: ProjectMedia[];
   external?: { label: string; hint?: string; href: string }[];
   next: string;
@@ -152,7 +154,8 @@ export const projects: Record<string, AIProject> = Object.fromEntries(
     {
       ...p,
       cover: withBase(p.cover),
-      media: p.media.map((m) => ({ ...m, src: withBase(m.src) })),
+      insights: projectStories[key]?.insights ?? [],
+      media: p.media.map((m, index) => ({ ...m, ...projectStories[key]?.mediaNotes[index], notes: notesForMedia(key, index, p.media.length), src: withBase(m.src) })),
     },
   ]),
 );

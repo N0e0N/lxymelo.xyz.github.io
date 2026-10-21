@@ -79,9 +79,6 @@ const ringProjects = RING_ORDER.map((slug) => {
     // 本站适配：原站的 roles 角色标签与外链，补到 open 覆盖层
     roles: p.roles,
     external: p.external ?? [],
-    // 本站内容源暂无 insights 字段；机器在数组为空时自动隐藏该行。
-    // 后续可在 project-data.ts 增加 insights 后在此映射。
-    insights: [],
     media: p.media.map((m) => {
       const isVideo = m.type === "video";
       return {
@@ -90,6 +87,10 @@ const ringProjects = RING_ORDER.map((slug) => {
         src: isVideo ? p.cover : m.src,
         shape: isVideo ? "wide" : SHAPE_OVERRIDES[m.src] ?? "land",
         caption: m.alt,
+        heading: m.heading,
+        description: m.description,
+        layout: m.layout,
+        notes: m.notes,
         // 与图片一样保留根路径，避免 pushState 后按项目目录解析。
         ...(isVideo ? { video: m.src } : {}),
       };
@@ -115,4 +116,5 @@ const aboutCard = {
 
 export const PROJECTS = [...ringProjects, aboutCard];
 
-export const IMAGE_FILES = PROJECTS.map((p) => p.file);
+// Atlas art is intentionally separate from the full-size detail cover.
+export const IMAGE_FILES = PROJECTS.map((p) => withBase(`/ring-covers/${p.slug}.webp`));

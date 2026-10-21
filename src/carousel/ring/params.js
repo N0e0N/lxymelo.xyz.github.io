@@ -115,15 +115,15 @@ export function defaultParams() {
     // The counter is the gate: the entry launches on the frame it reads 100.
     // holdAfter is a beat held after that and wants to stay near zero.
     holdAfter: 0,
-    loaderChase: 0.18,
+    loaderChase: 0.06,
     loaderBottom: 1, // vh
-    loaderOut: 0.45, // seconds to fade once the hold lets go
+    loaderOut: 0.2, // seconds to fade once the hold lets go
 
     // -- entry timing ----------------------------------------------------
     stagger: 0.34,
-    launchTime: 1.95,
+    launchTime: 1.1,
     spreadEase: "power2.out",
-    spreadTime: 3.6,
+    spreadTime: 2.1,
     // Where the ring goes once formed. stageAt is a fraction of the spread, so
     // 0.5 starts the move midway through the ring drawing.
     stageAt: 0.7,

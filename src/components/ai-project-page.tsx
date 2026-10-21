@@ -2,6 +2,7 @@ import type { AIProject } from "../data/project-data";
 import { projects } from "../data/project-data";
 import { PageFooter, PageHeader } from "./mpa-chrome";
 import NextProject from "./next-project";
+import { withBase } from "../lib/base";
 
 const AIProjectPage = ({ project }: { project: AIProject }) => {
   const next = projects[project.next];
@@ -9,7 +10,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
   return (
     <>
       <PageHeader />
-      <main className="mpa-main" id="main-content" tabIndex={-1}>
+      <main className="mpa-main case-study-page" id="main-content" tabIndex={-1}>
         <article className="mpa-project">
           <header className="mpa-project-hero">
             <figure className="mpa-project-cover">
@@ -47,11 +48,12 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
             </div>
           </header>
 
+          <div className="case-section-label case-gallery-label"><span>PROCESS & DETAILS</span><h2>设计过程与细节</h2></div>
           <section className="mpa-gallery" aria-label="项目图集">
             {project.media.map((item, index) => {
-              const wide = index % 5 === 0 || item.type === "video";
+              const notes = item.notes?.length ? item.notes : [{ title: item.heading ?? item.alt, text: item.description ?? "" }];
               return (
-                <figure key={item.src} className={wide ? "mpa-fig mpa-fig-wide" : "mpa-fig mpa-fig-half"}>
+                <figure key={item.src} className="mpa-fig case-media-row">
                   {item.type === "video" ? (
                     // 项目演示视频为无旁白的视觉短片
                     // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -59,6 +61,10 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
                   ) : (
                     <img src={item.src} alt={item.alt} loading={index > 1 ? "lazy" : "eager"} />
                   )}
+                  <figcaption className="project-media-caption">
+                    <span className="case-number">{String(index + 1).padStart(2, "0")} / {item.type === "video" ? "FILM" : "DETAIL"}</span>
+                    <div className="case-media-notes">{notes.map(note => <div className="case-reading-note" key={note.title}><h3>{note.title}</h3><p>{note.text}</p></div>)}</div>
+                  </figcaption>
                 </figure>
               );
             })}
@@ -67,6 +73,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
           <NextProject project={next} />
         </article>
       </main>
+      <a href={withBase("/")} className="project-return"><span className="project-return-content"><span aria-hidden="true">←</span> 返回作品</span></a>
       <PageFooter />
     </>
   );

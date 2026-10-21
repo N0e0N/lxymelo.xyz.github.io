@@ -1,60 +1,176 @@
-import { PageFooter, PageHeader } from "../components/mpa-chrome";
+import { useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { PageHeader } from "../components/mpa-chrome";
 import { withBase } from "../lib/base";
 
-const paragraphs = [
-  "我是 LXY.MELO，一名工作在 AI 与设计交叉地带的 Builder。白天做 AI 产品与工作流，晚上琢磨交互细节，偶尔办创客松、做播客、写设计教育内容。",
-  "我相信两件事：一是 AI 真正的价值在于把专业能力交到更多人手里，所以做课程台、科研智能体、设计启蒙内容；二是好的设计要经得起真实使用，所以做折叠屏交互、车载 HMI 这类有约束、有场景的硬问题。",
-  "业余时间是 Player：听歌、做歌、用 AI 给每首歌建一个精神空间。预测未来最好的方式，是动手创建未来。",
-];
+const chapters = ["你好", "关于", "学习", "实践"];
 
-const roles = ["AI Builder", "Designer", "Player"];
+export default function AboutPage() {
+  const root = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
 
-const AboutPage = () => {
+  const goTo = useRef<(index: number) => void>(() => {});
+
+  useLayoutEffect(() => {
+    const host = root.current!;
+    const sections = Array.from(host.querySelectorAll<HTMLElement>(".about-scene"));
+    let current = 0;
+    let moving = false;
+    let lastWheel = 0;
+    let wheelTotal = 0;
+    let touchStart: { x: number; y: number } | null = null;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let transition: gsap.core.Timeline | undefined;
+    const context = gsap.context(() => {
+      gsap.set(sections, { autoAlpha: 0 });
+      gsap.set(sections[0], { autoAlpha: 1 });
+    }, host);
+
+    const navigate = (index: number) => {
+      const next = Math.max(0, Math.min(sections.length - 1, index));
+      if (moving || next === current) return;
+      moving = true;
+      const direction = next > current ? 1 : -1;
+      const outgoing = sections[current];
+      const incoming = sections[next];
+      // Preserve keyboard access when leaving a chapter containing a focused link.
+      if (outgoing.contains(document.activeElement)) host.querySelector<HTMLElement>("main")?.focus();
+      current = next;
+      setActive(next);
+      transition?.kill();
+      context.add(() => {
+        if (reducedMotion.matches) {
+          gsap.set(sections, { autoAlpha: 0 });
+          gsap.set(incoming, { autoAlpha: 1 });
+          moving = false;
+          return;
+        }
+        gsap.set(incoming, { autoAlpha: 1 });
+        transition = gsap.timeline({ onComplete: () => { moving = false; } })
+          .to(outgoing.querySelectorAll(".about-motion"), {
+            y: -35 * direction, opacity: 0, filter: "blur(5px)",
+            duration: 0.3, stagger: 0.035, ease: "power2.in",
+          })
+          .set(outgoing, { autoAlpha: 0 })
+          .fromTo(incoming.querySelectorAll(".about-motion"), {
+            y: 48 * direction, opacity: 0, filter: "blur(7px)",
+          }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.6,
+            stagger: 0.065, ease: "power3.out" }, "-=0.08");
+      });
+    };
+    goTo.current = navigate;
+    const canScrollContent = (target: EventTarget | null, delta: number) => {
+      const section = target instanceof Element ? target.closest<HTMLElement>(".about-scene") : null;
+      return section && (delta > 0
+        ? section.scrollTop + section.clientHeight < section.scrollHeight - 2
+        : section.scrollTop > 2);
+    };
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      if (canScrollContent(event.target, event.deltaY)) return;
+      event.preventDefault();
+      const now = performance.now();
+      const freshGesture = now - lastWheel > 220;
+      lastWheel = now;
+      if (freshGesture) wheelTotal = 0;
+      if (moving) { wheelTotal = Infinity; return; }
+      if (wheelTotal === Infinity) return;
+      wheelTotal += event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1);
+      if (Math.abs(wheelTotal) >= 28) {
+        navigate(current + Math.sign(wheelTotal));
+        // Ignore the rest of this wheel/trackpad gesture, including momentum.
+        wheelTotal = Infinity;
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+      if (event.code === "Space" && target.closest("a, button")) return;
+      let next: number;
+      if (["ArrowDown", "PageDown"].includes(event.key) || event.code === "Space" && !event.shiftKey) next = current + 1;
+      else if (["ArrowUp", "PageUp"].includes(event.key) || event.code === "Space" && event.shiftKey) next = current - 1;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = sections.length - 1;
+      else return;
+      if (canScrollContent(event.target, next - current)) return;
+      event.preventDefault();
+      if (!event.repeat) navigate(next);
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      touchStart = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (!touchStart || event.touches.length !== 1) return;
+      const delta = touchStart.y - event.touches[0].clientY;
+      if (!canScrollContent(event.target, delta) && Math.abs(delta) > 10) event.preventDefault();
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      if (!touchStart || !event.changedTouches.length) return;
+      const delta = touchStart.y - event.changedTouches[0].clientY;
+      const horizontal = touchStart.x - event.changedTouches[0].clientX;
+      if (Math.abs(delta) > 45 && Math.abs(delta) > Math.abs(horizontal) && !canScrollContent(event.target, delta)) navigate(current + Math.sign(delta));
+      touchStart = null;
+    };
+    host.addEventListener("wheel", onWheel, { passive: false });
+    host.addEventListener("touchstart", onTouchStart, { passive: true });
+    host.addEventListener("touchmove", onTouchMove, { passive: false });
+    host.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      host.removeEventListener("wheel", onWheel);
+      host.removeEventListener("touchstart", onTouchStart);
+      host.removeEventListener("touchmove", onTouchMove);
+      host.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("keydown", onKey);
+      transition?.kill();
+      context.revert();
+    };
+  }, []);
+
   return (
-    <>
+    <div className="about-experience" ref={root}>
+      <div className="about-landscape" aria-hidden="true">
+        <img src={withBase("/about/about-me.jpg")} alt="" fetchPriority="high" />
+      </div>
       <PageHeader />
-      <main className="mpa-main" id="main-content" tabIndex={-1}>
-        <article className="mpa-about">
-          <figure className="mpa-about-figure">
-            <img src={withBase("/about/about-me.jpg")} alt="Melo 在海边" />
-            <figcaption>Melo 在海边</figcaption>
-          </figure>
-          <div className="mpa-about-body">
-            <p className="mpa-kicker">ABOUT ME</p>
-            <h1 className="mpa-title">关于我</h1>
-            {paragraphs.map((text) => (
-              <p key={text.slice(0, 10)} className="mpa-prose">
-                {text}
-              </p>
-            ))}
-            <ul className="mpa-roles">
-              {roles.map((role) => (
-                <li key={role}>{role}</li>
-              ))}
-            </ul>
-            <section className="about-section" aria-labelledby="directions-title">
-              <p className="mpa-kicker">EXPLORING</p>
-              <h2 id="directions-title">关注方向</h2>
-              <ul className="about-directions">
-                <li><strong>AI 与专业能力</strong><span>课程制作、科研工作流与设计教育，让工具进入真实的学习和创作过程。</span></li>
-                <li><strong>有场景的交互设计</strong><span>折叠屏交互与车载 HMI，在具体约束中探索更清晰的使用体验。</span></li>
-                <li><strong>音乐与创作实验</strong><span>听歌、做歌，用 AI 探索音乐、空间与叙事之间的连接。</span></li>
-              </ul>
-            </section>
-            <section className="about-section" id="contact" aria-labelledby="contact-title">
-              <p className="mpa-kicker">FIND ME</p>
-              <h2 id="contact-title">找到我</h2>
-              <p className="mpa-prose">在 GitHub 关注我的公开项目与代码。</p>
-              <a className="mpa-button" href="https://github.com/N0e0N" target="_blank" rel="noreferrer">
-                GitHub <span aria-hidden="true">↗</span>
-              </a>
-            </section>
+      <main id="main-content" tabIndex={-1} className="about-story">
+        <section className="about-scene about-intro" id="hello" inert={active !== 0} aria-hidden={active !== 0} aria-labelledby="hello-title">
+          <div className="about-copy">
+            <p className="about-eyebrow about-motion">01 / A LITTLE ABOUT ME</p>
+            <p className="about-prelude about-motion">我是</p>
+            <h1 id="hello-title" className="about-name about-motion">罗晓阳<span className="about-alias">也可以叫我 <em>MelO.</em></span></h1>
+            <p className="about-caption about-motion">AI 产品 · 交互设计 · 创作实验</p>
           </div>
-        </article>
+        </section>
+        <section className="about-scene" id="story" inert={active !== 1} aria-hidden={active !== 1} aria-labelledby="story-title">
+          <div className="about-copy">
+            <p className="about-eyebrow about-motion">02 / BETWEEN DESIGN & AI</p>
+            <h2 id="story-title" className="about-heading about-motion">从设计出发，<br />让想法<em>发生。</em></h2>
+            <p className="about-description about-motion">在 AI 与设计之间探索，<br />把复杂能力，变成好用的产品。</p>
+            <p className="about-description about-motion">做 Agent，也做课程、播客和创作实验。<br />比起只谈未来，我更喜欢动手试试。</p>
+            <div className="about-tags about-motion"><span>AI BUILDER</span><span>DESIGNER</span><span>PLAYER</span></div>
+          </div>
+        </section>
+        <section className="about-scene" id="learning" inert={active !== 2} aria-hidden={active !== 2} aria-labelledby="learning-title">
+          <div className="about-copy">
+            <p className="about-eyebrow about-motion">03 / KEEP LEARNING</p>
+            <h2 id="learning-title" className="about-heading about-motion">设计是起点。<br /><em>探索不设限。</em></h2>
+            <div className="about-record about-motion"><p className="about-date">2024 — 至今 · 硕士</p><h3>同济大学</h3><p>人工智能与数据设计</p></div>
+            <div className="about-record about-motion"><p className="about-date">2020 — 2024 · 本科</p><h3>湖南大学</h3><p>工业设计 / 交互设计<span className="about-note">国家奖学金 · 优秀毕业生</span></p></div>
+          </div>
+        </section>
+        <section className="about-scene" id="practice" inert={active !== 3} aria-hidden={active !== 3} aria-labelledby="practice-title">
+          <div className="about-copy">
+            <p className="about-eyebrow about-motion">04 / LEARNING BY BUILDING</p>
+            <h2 id="practice-title" className="about-heading about-motion">在真实场景里，<br /><em>把产品做好。</em></h2>
+            <div className="about-record about-motion"><p className="about-date">2026.03 — 2026.07</p><h3>字节跳动 <span>即创 AI</span></h3><p>广告成片 Agent，让 AI 更懂创作。</p></div>
+            <div className="about-record about-motion"><p className="about-date">2025.08 — 2026.02</p><h3>小红书 <span>数据中台</span></h3><p>Data Agent，让数据更容易被使用。</p></div>
+            <div className="about-record about-motion"><p className="about-date">2024.12 — 2025.04</p><h3>特赞科技 <span>智慧营销</span></h3><p>鞋款昵称 Agent，10+ 创意落地「618」。</p></div>
+            <div className="about-endlinks about-motion"><a href={withBase("/")}>看看我的作品 <span aria-hidden="true">↗</span></a><a href="https://github.com/N0e0N" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+          </div>
+        </section>
       </main>
-      <PageFooter />
-    </>
+      <div className="about-bottom"><span className="about-scroll-note">{active === 3 ? "KEEP EXPLORING ↗" : "SCROLL TO EXPLORE ↓"}</span><nav aria-label="关于我章节" className="about-chapters">{chapters.map((chapter, index) => <button type="button" key={chapter} onClick={() => goTo.current(index)} aria-label={`${index + 1}. ${chapter}`} aria-current={active === index ? "step" : undefined}><span className="about-chapter-line" /><span>{`0${index + 1}`}</span></button>)}</nav><span className="about-coordinate">LXY.MELO / ABOUT</span></div>
+    </div>
   );
-};
-
-export default AboutPage;
+}

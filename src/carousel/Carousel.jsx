@@ -116,9 +116,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     links: null,
     figs: [],
     boxes: [],
-    insightRow: null,
-    insightHeads: [],
-    insightTexts: [],
     next: null,
     nextIdx: null,
     nextName: null,
@@ -598,23 +595,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     const fx = { items: [], imgs: [], texts: [], rules: [], ruleA: 0 };
 
 
-    // Close sits at the page's right edge on the title's line, or in the
-    // band above it when the name would run into it.
-    const placeClose = () => {
-      const overlay = openRef.current;
-      if (!overlay) return;
-      const size = 44;
-      const left = viewW - (params.metaRight / 100) * viewW - size;
-      const title = fx.items.find((it) => it.title);
-      let top = (params.openTop / 100) * viewH;
-      if (title && !title.hidden && title.left + title.w + 24 < left) {
-        top = title.top + title.h * 0.5 - size * 0.5;
-      }
-      overlay.style.setProperty("--y-close", viewW <= 640
-        ? `max(76px, calc(env(safe-area-inset-top) + 64px))`
-        : `${top}px`);
-    };
-
     // Re-measuring keeps what has already been revealed: a resize should not
     // put a page back behind its reveals. Callers that want a page unseen
     // follow it with resetFx.
@@ -656,7 +636,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // Their ink, from the CSS the borders would have been drawn in.
       fx.ruleA =
         parseFloat(getComputedStyle(overlay).getPropertyValue("--rule-a")) || 0;
-      placeClose();
     };
 
     // The page's type, set once per open onto one sheet: each block drawn in
@@ -830,7 +809,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       };
       for (const [k, v] of Object.entries(vars))
         overlay.style.setProperty(k, v);
-      closeRef.current?.setAttribute("aria-label", params.closeText);
+      closeRef.current?.setAttribute("aria-label", "返回作品首页");
       measurePage();
       if (openI >= 0) rasterText();
     };
@@ -1116,14 +1095,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     // so the ring reassembles exactly the way it parted.
     const closeEl = closeRef.current;
     const roomEl = glowRef.current;
-    const closeDisc = closeEl?.querySelector(".close-disc") ?? null;
-    const closeStrokes = closeEl
-      ? [...closeEl.querySelectorAll(".close-stroke")]
-      : [];
-    gsap.set(closeDisc, { scale: 0, opacity: 0 });
-    closeStrokes.forEach((el, k) =>
-      gsap.set(el, { rotation: k ? -45 : 45, scaleX: 0 }),
-    );
+    const returnContent = closeEl?.querySelector(".project-return-content");
+    gsap.set(returnContent, { x: -8, opacity: 0 });
 
     // 本站适配：封面只有一份全尺寸图，无 /sm 缩略副本，
     // projects.js 的 file 字段即全路径，直接加载。
@@ -1415,7 +1388,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // The other pictures and clips: boxes in the DOM, planes in the shader,
       // set into the page's rhythm by their shapes. Their art is asked for
       // now and not before — the ring should not be paying for it. Each
-      // caption is the picture's accessible label; none is printed.
+      // captions provide a short reading guide below each image.
       const media = (p.media ?? []).slice(0, MEDIA_MAX);
       const slots = slotsFor(media);
       els.figs.forEach((fig, k) => {
@@ -1432,6 +1405,24 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         if (!m) return;
         fig.dataset.slot = slots[k];
         fig.dataset.shape = m.shape;
+        fig.dataset.readingLayout = m.layout ?? "full";
+        const caption = fig.querySelector(".project-media-caption");
+        if (caption) {
+          caption.querySelector(".case-number").textContent = `${idx(k)} / ${m.video ? "FILM" : "DETAIL"}`;
+          const container = caption.querySelector(".case-media-notes");
+          container.replaceChildren();
+          const notes = m.notes?.length ? m.notes : [{ title: m.heading ?? m.caption, text: m.description ?? "" }];
+          for (const note of notes) {
+            const block = document.createElement("div");
+            block.className = "case-reading-note";
+            const heading = document.createElement("h3");
+            heading.textContent = note.title;
+            const text = document.createElement("p");
+            text.textContent = note.text;
+            block.append(heading, text);
+            container.append(block);
+          }
+        }
         fig.style.order = String(k * 2);
         if (box) {
           // 清掉上一项目图片写下的内联尺寸，否则切换后新项目沿用旧宽度错排。
@@ -1445,24 +1436,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         }
       });
       loadMore(media);
-
-      // Three insights, as a row after the opening pictures: after the
-      // second, or after the pair the second one begins, never inside it.
-      const notes = (p.insights ?? []).slice(0, 3);
-      let after = Math.min(1, media.length - 1);
-      if (slots[after] === "pair-a") after += 1;
-      if (els.insightRow) {
-        els.insightRow.hidden = !notes.length;
-        els.insightRow.style.order = String(after * 2 + 1);
-      }
-      for (let k = 0; k < 3; k++) {
-        const n = notes[k];
-        const head = els.insightHeads[k];
-        const body = els.insightTexts[k];
-        if (head?.parentElement) head.parentElement.hidden = !n;
-        if (head) head.textContent = n ? `${idx(k)}\u2003${n.title}` : "";
-        if (body) body.textContent = n ? n.text : "";
-      }
 
       // The way on: the next project down the ring, which is also the next
       // name down the column.
@@ -1672,19 +1645,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         T * 0.6,
       );
       tl.to(pageA, { a: 1, duration: 0.5, ease: "power2.out" }, T * 0.6);
-      // Close comes in as the page settles: its disc opens from the centre
-      // and the cross draws itself, one stroke after the other. Played
-      // backwards, it is put away the same way.
+      // The return action appears away from the persistent top navigation.
       tl.fromTo(
-        closeDisc,
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.7)" },
-        T * 0.62,
-      );
-      tl.fromTo(
-        closeStrokes,
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.4, ease: "power3.out", stagger: 0.08 },
+        returnContent,
+        { x: -8, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" },
         T * 0.72,
       );
       return tl;
@@ -1784,8 +1749,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       }
       const els = openTextRef.current;
       gsap.set([els.head, els.body].filter(Boolean), { opacity: 0 });
-      gsap.set(closeDisc, { scale: 0, opacity: 0 });
-      gsap.set(closeStrokes, { scaleX: 0 });
+      gsap.set(returnContent, { x: -8, opacity: 0 });
       gsap.set(metaBoxes(), { opacity: 1 });
       // The name back where style() put it, behind the ring. Values, not
       // clearProps: clearing any transform property makes GSAP strip the
@@ -2210,7 +2174,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
     const tickLoader = (dt) => {
       const target = Math.min(loadProg, clamp01(state.progress));
-      loading.shown += (target - loading.shown) * chase(dt, params.loaderChase);
+      // Once all art and the seed are ready, do not add a smoothing delay.
+      loading.shown = target >= 1 ? 1 : loading.shown + (target - loading.shown) * chase(dt, params.loaderChase);
 
       // Never 000; that reads as nothing happening.
       const n = Math.min(100, Math.max(1, Math.round(loading.shown * 100)));
@@ -2329,7 +2294,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     // Where the glow was last put, so it is only moved when the front moves.
     const glowAt = { x: -1, y: -1 };
     // And how far up the halo under Close is, so it is only written on change.
-    let haloAt = -1;
     let leanNow = 0;
     // The index's brightness per name, written only when it moves.
     const listK = new Float32Array(MAX_PLANES);
@@ -2607,14 +2571,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           opacity: String(titleGl.a * transition.a),
           pointerEvents: opening.f === 1 && !closing && !advancing ? "auto" : "none",
         });
-      }
-      // Close sits over the page; once the page has moved under it, a halo of
-      // the paper comes up round it so what passes under fades rather than
-      // being cut at its rim — on a phone that is every line of text.
-      const halo = openI >= 0 ? clamp01(scrollY / 60) : 0;
-      if (closeEl && Math.abs(halo - haloAt) > 0.01) {
-        haloAt = halo;
-        closeEl.style.setProperty("--halo", halo.toFixed(2));
       }
       const growX = 1 + (openRect.w / cardW - 1) * grow;
       const growY = 1 + (openRect.h / cardH - 1) * grow;
@@ -3338,7 +3294,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       if (loaderEl) gsap.set(loaderEl, { opacity: launchReady ? 0 : 1 });
 
       const tl = gsap.timeline({
-        delay: 0.25,
+        delay: 0,
         onComplete: () => {
           interactive = true;
           paintCursor();
@@ -3348,7 +3304,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       tl.fromTo(
         state,
         { progress: 0, launch: 0, spread: 0, spin: 0, shift: 0 },
-        { progress: 1, duration: 1.2, ease: "power2.out" },
+        { progress: 1, duration: 0.75, ease: "power2.out" },
       );
 
       // Formed and sitting at centre. It stays there until the counter lands,
@@ -3396,7 +3352,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           { value: 0 },
           {
             value: 1,
-            duration: params.textTime,
+            duration: 0.75,
             ease: params.textEase,
             stagger: params.textStagger,
           },
@@ -3412,7 +3368,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         tl.fromTo(
           site,
           { opacity: 0 },
-          { opacity: 1, duration: params.textTime, ease: params.textEase },
+          { opacity: 1, duration: 0.75, ease: params.textEase },
           textStart,
         );
       }
@@ -3422,7 +3378,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           { "--glow-on": 0 },
           {
             "--glow-on": 1,
-            duration: params.textTime,
+            duration: 0.75,
             ease: params.textEase,
           },
           textStart,
@@ -3457,7 +3413,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
     // fonts.ready is reliable, but nothing here is worth a permanently blank
     // page if it ever is not.
-    const fontFallback = setTimeout(startEntry, 3000);
+    const fontFallback = setTimeout(startEntry, 700);
     (document.fonts?.ready ?? Promise.resolve())
       .then(startEntry)
       .catch(startEntry);
@@ -3713,7 +3669,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       delete root.dataset.keys;
       document.removeEventListener("visibilitychange", onVisibility);
       closeEl?.removeEventListener("click", closeProject);
-      gsap.killTweensOf([closeDisc, ...closeStrokes].filter(Boolean));
+      gsap.killTweensOf(returnContent);
 
       tl?.kill();
       stageTl?.kill();
@@ -4036,41 +3992,10 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
                   >
                     <video className="detail-video" controls playsInline preload="metadata" hidden />
                   </div>
+                  <figcaption className="project-media-caption"><span className="case-number" /><div className="case-media-notes" /></figcaption>
                 </figure>
               ))}
-              {/* Three insights, a numbered row between the opening pictures
-                  and the rest; setOpenCopy fills it and sets its place. */}
-              <section
-                ref={(el) => {
-                  openTextRef.current.insightRow = el;
-                }}
-                className="insights"
-              >
-                {Array.from({ length: 3 }, (_, k) => (
-                  <div key={k} data-gl="rule" className="insight">
-                    <div
-                      ref={(el) => {
-                        openTextRef.current.insightHeads[k] = el;
-                      }}
-                      data-gl="text"
-                      className="opacity-0"
-                      style={MICRO}
-                    />
-                    <p
-                      ref={(el) => {
-                        openTextRef.current.insightTexts[k] = el;
-                      }}
-                      data-gl="text"
-                      className="m-0 mt-[1.6vh] leading-[1.4] tracking-[-0.005em] opacity-0"
-                      style={{
-                        fontFamily: "var(--f-name)",
-                        fontSize: "var(--t-name)",
-                        fontWeight: "var(--w-name)",
-                      }}
-                    />
-                  </div>
-                ))}
-              </section>
+
             </div>
 
             {/* The way on: the next project's name at the size of this one's,
@@ -4092,21 +4017,13 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           />
         </article>
 
-        {/* Close: a disc of the page's own colour with a hairline ring and a
-            cross, styled in globals.css. Drawn in by the open timeline.
-            Fixed, so it stays put while the page scrolls under it. */}
         <button
           ref={closeRef}
           type="button"
-          className="close fixed z-30"
-          aria-label="关闭项目"
-          style={{ top: "var(--y-close)", right: "var(--x-mr)" }}
+          className="project-return"
+          aria-label="返回作品首页"
         >
-          <span className="close-disc" aria-hidden="true" />
-          <span className="close-x" aria-hidden="true">
-            <span className="close-stroke" />
-            <span className="close-stroke" />
-          </span>
+          <span className="project-return-content"><span aria-hidden="true">←</span> 返回作品</span>
         </button>
       </div>
 

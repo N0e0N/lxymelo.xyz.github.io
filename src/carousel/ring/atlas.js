@@ -125,11 +125,7 @@ export function buildAtlas(
   let settled = 0;
   const tick = () => onProgress?.(settled / files.length);
 
-  // Cells no wider than the half-size copies in /sm read those instead: a
-  // phone or tablet draws its front card from at most ~620 px, and the full
-  // set is three times the bytes for the entry to wait on.
-  // 本站适配：封面只有一份全尺寸图，无 /sm 缩略副本，一律按 IMAGE_FILES
-  // 给出的全路径直接加载。
+  // Lightweight, pre-cropped WebP covers are used only for this atlas.
   const fetchInto = (i, priority) =>
     loadImage(files[i], priority)
       .then((img) => paint(img, i))
