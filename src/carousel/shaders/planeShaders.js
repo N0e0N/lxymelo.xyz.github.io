@@ -77,7 +77,10 @@ export const fragmentShader = /* glsl */ `
   // cell, which was never meant to be seen at that size. Always sampled, so
   // the derivatives the mip selection needs stay defined, and masked in by
   // cell; zw cover-fit the art to a frame that has left 3:2.
+  uniform sampler2D uNext;
+  uniform vec2 uNextP;         // preview plane index, full-image cell
   uniform sampler2D uHero;
+  uniform vec2 uDetail;
   uniform vec4  uHeroP;        // cell it stands in for (-1 = none), mix, crop
 
   // Footage, one clip at a time, over the still it starts from: a card's on
@@ -287,6 +290,7 @@ export const fragmentShader = /* glsl */ `
   // left 3:2; the footage over either while it plays. All are sampled and
   // masked in, so the derivatives the mip selection needs stay defined.
   vec3 artAt(vec2 uv, float cell, vec2 fr) {
+    vec2 planeUV = uv;
     float hero = 1.0 - step(0.5, abs(cell - uHeroP.x));
     uv = mix(uv, 0.5 + (uv - 0.5) * uHeroP.zw, hero);
     vec3 c;
@@ -301,12 +305,14 @@ export const fragmentShader = /* glsl */ `
     } else {
       c = texture2D(uAtlas, atlasUV(uv, cell)).rgb;
     }
+    float next = 1.0 - step(0.5, abs(cell - uNextP.y));
+    c = mix(c, texture2D(uNext, planeUV).rgb, next);
     c = mix(c, texture2D(uHero, uv).rgb, hero * uHeroP.y);
     float more = step(uMoreP.x - 0.5, cell);
     c = mix(c, texture2D(uMore, moreUV(uv, cell)).rgb, more * uMoreP.z);
     // Last, so a clip plays over a page picture as well as over a card.
     float live = 1.0 - step(0.5, abs(cell - uLiveP.x));
-    vec3 lc = texture2D(uLive, 0.5 + (uv - 0.5) * uLiveP.zw).rgb;
+    vec3 lc = texture2D(uLive, 0.5 + (planeUV - 0.5) * uLiveP.zw).rgb;
     c = mix(c, lc, live * uLiveP.y);
     // The bead wears the ink, whatever the sheets above made of its cell —
     // put through the room's tone backwards, so it comes out of it as the
@@ -373,6 +379,9 @@ export const fragmentShader = /* glsl */ `
       // starts as a circle (r = half extent), relaxes into the rounded rect
       float rMax = min(halfSize.x, halfSize.y);
       float r = min(rMax, mix(rMax, uRadius, smoothstep(0.30, 1.0, min(sc.x, sc.y))));
+      float detail = 1.0 - step(0.5, abs(uScale[i].w - uDetail.x));
+      float nextPlane = 1.0 - step(0.5, abs(float(i) - uNextP.x));
+      r *= 1.0 - max(nextPlane, max(detail * uDetail.y, step(uMoreP.x - 0.5, uScale[i].w)));
 
       float di = sdRoundBox(q, halfSize, r);
       d = smin(d, di, k);

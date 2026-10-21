@@ -7,6 +7,19 @@
 /* One breakpoint of our own: the first width above the ring's tablet band
    (`narrowAt`, 1024 inclusive), so the project page changes layout on the
    same pixel the type scale does. */
+/* 跨文档平滑过渡：首页圆环跳项目页、项目页之间跳转时，
+   支持 View Transition 的浏览器会自动交叉淡化，避免硬切。 */
+@view-transition {
+  navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 @theme {
   --breakpoint-wide: 1025px;
   /* And the first width above the phone band (tightAt, 640 inclusive). */
@@ -56,7 +69,7 @@
    smooth. So their strengths ride in their colours (--glow-a, --glow-on,
    --vig), never in an opacity, which would composite them apart again. */
 .room {
-  --k: calc(var(--glow-a, 0) * var(--glow-on, 0));
+  --k: calc(var(--glow-a, 0) * var(--glow-on, 0) * var(--room-shift, 0));
   background:
     radial-gradient(
       ellipse farthest-corner at 50% 50%,
@@ -82,8 +95,13 @@
     var(--dither, none) 0 0 / 64px 64px;
 }
 
-/* 各色区独立穿过视口，重叠混色；纸底保持固定。 */
-.room[data-mode="overview"] {
+/* 彩色层独立淡出，项目光晕与纸底始终保留。 */
+.room::before {
+  content: "";
+  position: absolute;
+  inset: -32px;
+  pointer-events: none;
+  opacity: calc(1 - var(--room-shift, 0));
   filter: blur(24px);
   background:
     radial-gradient(ellipse at 38% 57%, rgb(235 136 179 / 52%) 0%, transparent 65%),
@@ -99,8 +117,13 @@
   background-position: var(--halo-0-x, 20%) var(--halo-0-y, 20%), var(--halo-1-x, 80%) var(--halo-1-y, 70%), var(--halo-2-x, 30%) var(--halo-2-y, 80%), var(--halo-3-x, 70%) var(--halo-3-y, 20%), var(--halo-4-x, 50%) var(--halo-4-y, 70%), var(--halo-5-x, 80%) var(--halo-5-y, 50%), var(--halo-6-x, 20%) var(--halo-6-y, 50%), 0 0;
 }
 
+.open-next { margin: clamp(32px, 5vh, 64px) 0 32px; padding-top: 20px; }
+.open-next-button { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; }
+.open-next-name { width: 100%; font-size: clamp(20px, 2.2vw, 30px); }
+.open-next-arrow { font-size: 24px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .room[data-mode="overview"] { animation: none; }
+  .room::before { animation: none; }
 }
 
 /* The grain is a soft-light pass in the dark room and a multiply in the
@@ -142,6 +165,8 @@ canvas {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: 2vw;
+  width: min(100%, 960px);
+  margin-inline: auto;
 }
 .media-fig {
   grid-column: 1 / -1;
@@ -542,8 +567,10 @@ html[data-keys] .close:focus-visible {
 .mpa-gallery {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
+  width: min(100%, 960px);
+  margin-inline: auto;
   gap: 1.6rem;
-  margin-top: 4.5rem;
+  margin-top: 3rem;
 }
 .mpa-fig {
   grid-column: 1 / -1;
@@ -665,6 +692,39 @@ html[data-keys] .close:focus-visible {
   color: var(--paper);
 }
 
+/* 详情媒体保留完整画幅；圆环卡片由 WebGL 单独处理。 */
+.mpa-project-cover img, .mpa-fig img, .mpa-fig video, .mpa-next img {
+  border-radius: 0;
+  object-fit: contain;
+}
+/* 每张详情媒体可在一屏内完整观看，长图不再按整列无限放大。 */
+.mpa-project-cover img, .mpa-fig img, .mpa-fig video {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 78vh;
+  max-height: 78svh;
+  margin-inline: auto;
+  object-fit: contain;
+}
+.detail-video { display: block; width: 100%; height: auto; max-height: 78svh; object-fit: contain; border-radius: 0; }
+.detail-video[hidden] { display: none; }
+.detail-hero-video { position: absolute; z-index: 1; }
+.open-next-button:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
+@media (max-width: 899px) {
+  .mpa-header { padding: max(12px, env(safe-area-inset-top)) max(5vw, env(safe-area-inset-right)) 12px max(5vw, env(safe-area-inset-left)); }
+  .mpa-header a { min-height: 44px; display: inline-flex; align-items: center; }
+  .mpa-main { padding-top: 6rem; padding-bottom: 3rem; }
+  .mpa-project-summary { margin-top: 1.5rem; }
+  .mpa-gallery, .mpa-next { margin-top: 2.5rem; }
+  .mpa-next { flex-direction: column; align-items: flex-start; }
+  .mpa-next > div { min-width: 0; overflow-wrap: anywhere; }
+  .mpa-next img { width: 100%; height: auto; }
+  .media-fig[data-shape] .media-box { grid-column: 1 / -1; }
+  .home-help { bottom: max(16px, env(safe-area-inset-bottom)); }
+  .home-help button { min-height: 44px; }
+}
+
 /* 站点入口沿屏幕边缘排列，不占用圆环的作品区域。 */
 .home-header {
   position: fixed; inset: 0 0 auto; z-index: 40;
@@ -713,3 +773,4 @@ html[data-keys] .close:focus-visible {
   .project-index-year { display: none; }
   .mpa-header .site-nav { gap: 1rem; font-size: 0.72rem; }
 }
+

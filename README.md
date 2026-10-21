@@ -30,28 +30,32 @@ npm run preview    # 本地预览构建产物
 
 > 项目数据统一维护在 `src/data/project-data.ts`，新增项目页只需在 `projects/<slug>/` 下加一个 `index.html`。
 
-## 版本管理与发布
+## 部署到 GitHub Pages + 绑定自定义域名
 
-当前版本：**1.1.0**，变更见 [CHANGELOG.md](CHANGELOG.md)。
+仓库已内置 GitHub Actions 工作流（`.github/workflows/deploy.yml`），推送到 `main` 分支后自动构建并发布。
 
-- 仓库：https://github.com/N0e0N/lxymelo.xyz.github.io
-- `main`：线上分支，推送后由 `.github/workflows/deploy.yml` 自动构建部署。
-- `release/v1.1.0`：保留本次版本源码；`v1.1.0`：带注释的版本标签。
-- 后续发布从最新 `main` 创建 `release/vX.Y.Z`，更新 manifest/lockfile 与变更记录，验证后推送分支，非强制合并到 `main`，再推送版本标签。
-- 回滚通过新分支执行 `git revert` 撤销对应发布提交（合并提交需 `-m 1`），重新验证并合并到 `main`；不 reset、不强推，不改写历史。标签用于定位历史版本。
+### 步骤
 
-## GitHub Pages 与域名
+1. **推代码到 GitHub**
+   ```bash
+   git init            # 若尚未初始化
+   git add .
+   git commit -m "feat: initial portfolio site"
+   git branch -M main
+   git remote add origin https://github.com/<用户名>/<仓库名>.git
+   git push -u origin main
+   ```
 
-线上规范地址：https://www.lxymelo.xyz/；https://lxymelo.xyz/ 重定向至规范地址。
-`public/CNAME` 会随构建复制到 `dist/CNAME`，值为 `www.lxymelo.xyz`。
-Pages 设置应使用 **GitHub Actions** 并启用 HTTPS；域名 DNS 保持现有 GitHub Pages 配置。
+2. **开启 GitHub Pages**
+   - 仓库 Settings → Pages
+   - Source 选择 **GitHub Actions**（工作流会自动构建并部署）
 
-构建前执行 `npm ci`，发布验证执行：
+3. **绑定自己的域名**
+   - 在 **Settings → Pages → Custom domain** 填入你的域名（如 `www.example.com`）
+   - GitHub 会提示你在域名服务商处添加一条 CNAME 记录，指向 `<用户名>.github.io`
+   - 勾选 **Enforce HTTPS**
 
-```bash
-npm run build
-npm run lint
-npx tsc --noEmit
-```
+### 注意事项
 
-`dist/` 与 `node_modules/` 不提交。站点资源使用根路径，针对上述自定义域名部署。
+- 站点资源使用根路径（`/xxx`），绑定自定义域名后一切正常；若暂时用 `https://<用户名>.github.io/<仓库名>/` 预览，需要把 `vite.config.ts` 中的 `base` 改为 `/<仓库名>/` 并重新构建。
+- 构建产物 `dist/` 已加入 `.gitignore`，不会提交到仓库。

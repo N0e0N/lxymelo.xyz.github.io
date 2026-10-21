@@ -30,6 +30,7 @@ import {
   smoothstep,
 } from "./ring/utils";
 import { withBase } from "../lib/base";
+import NextProject from "../components/next-project";
 
 // The fan starts fractionally into the spread so the seed reads first.
 const FAN_START = 0.06;
@@ -47,7 +48,6 @@ const MICRO = {
 // A project page carries up to this many pictures and clips, each in a box
 // of one of three proportions.
 const MEDIA_MAX = 6;
-const SHAPES = { land: 1.5, port: 0.8, wide: 16 / 9 };
 
 // The page's rhythm, read off the shapes in order: landscapes alternate a
 // large picture on the right with a smaller one on the left, portraits make
@@ -103,6 +103,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
   const openRef = useRef(null);
   const closeRef = useRef(null);
   const openTextRef = useRef({
+    heroVideo: null,
     hero: null,
     head: null,
     title: null,
@@ -121,7 +122,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     next: null,
     nextIdx: null,
     nextName: null,
-    nextImg: null,
+    nextImage: null,
     spacer: null,
   });
   // Per side: the box that positions the lockup, the filtered wrapper the goo
@@ -241,7 +242,10 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       uBeadTex: { value: textBlank },
       uBeadL: { value: new THREE.Vector4() },
       uBeadLP: { value: new THREE.Vector4(1, 1, 1, 0) },
+      uNext: { value: heroBlank },
+      uNextP: { value: new THREE.Vector2(-1, -1) },
       uHero: { value: heroBlank },
+      uDetail: { value: new THREE.Vector2(-1, 0) },
       uHeroP: { value: new THREE.Vector4(-1, 0, 1, 1) },
       uLive: { value: liveBlank },
       uLiveP: { value: new THREE.Vector4(-1, 0, 1, 1) },
@@ -498,7 +502,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         const atRest =
           (params.tightSpacing * viewH) /
           (2 * Math.sin(Math.PI / Math.max(3, Math.round(params.count))));
-        const card = Math.min(params.tightCard * viewW, viewH * 0.5);
+        const card = Math.min(params.tightCard * viewW, viewH * 0.5 * Math.min(1, params.planeAspect));
         tightEnd = Math.max(1, atRest / formed);
         // 竖版：前排卡的宽 = 长边 × planeAspect，planeK 按宽反推
         planeK = card / tightEnd / (params.planeSize * params.planeAspect * fit);
@@ -553,6 +557,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     const openCols = { titlePx: 1, infoLeft: 0, infoTop: 0, infoW: 1 };
     let refreshTitleFlip = null;
 
+    let detailCell = -1;
+    const mediaAspects = new Map();
     const refitOpen = () => {
       const top = Math.max((params.openTop / 100) * viewH, lipPx()) + 48;
       const left = (params.metaLeft / 100) * viewW;
@@ -560,7 +566,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const w = Math.max(1, right - left);
       const stacked = viewW < 900;
       const gap = Math.max(24, viewW * 0.04);
-      const heroAspect = tightNow ? params.tightHeroAspect : params.openHeroAspect;
+      const cell = detailCell;
+      const project = PROJECTS[cell];
+      const heroAspect = mediaAspects.get(project?.video) ?? mediaAspects.get(project?.file) ?? params.planeAspect;
       const h = Math.min((stacked ? w : w * 0.44) / heroAspect, viewH * 0.72);
       const heroW = h * heroAspect;
       openRect.w = heroW;
@@ -589,7 +597,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     // the accessibility tree and for selection.
     const fx = { items: [], imgs: [], texts: [], rules: [], ruleA: 0 };
 
-    const findIt = (el) => fx.items.find((it) => it.el === el);
 
     // Close sits at the page's right edge on the title's line, or in the
     // band above it when the name would run into it.
@@ -778,6 +785,15 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const overlay = openRef.current;
       if (!overlay) return;
       const r = openRect;
+      for (const box of openTextRef.current.boxes) {
+        if (!box) continue;
+        const aspect = Number(box.style.aspectRatio);
+        if (aspect > 0) {
+          box.style.maxWidth = `${viewH * 0.78 * aspect}px`;
+          box.style.width = "100%";
+          box.style.justifySelf = "center";
+        }
+      }
       const g = endNow() * fit;
       const vars = {
         // 本站适配：宋体栈直接插入（params 值已含引号与多族，不再整体包裹）
@@ -808,7 +824,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         "--y-strip": `${params.openStrip}vh`,
         "--y-images": `${params.openImages}vh`,
         // The corner the shader draws, so the pictures below match the hero.
-        "--radius": `${params.radius * planeK * g}px`,
+        "--radius": "0px",
       };
       for (const [k, v] of Object.entries(vars))
         overlay.style.setProperty(k, v);
@@ -849,8 +865,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // hangs between the header and the card's top edge.
       const g = endNow() * fit;
       const W = params.planeSize * planeK * g;
+      const cardWidth = W * Math.min(1, params.planeAspect);
       const gap = (params.blockGap / 100) * viewW;
-      const blockX = viewW * 0.5 + W * 0.5 + gap;
+      const blockX = viewW * 0.5 + cardWidth * 0.5 + gap;
       const colW = listEl && !tightNow ? listEl.offsetWidth : 0;
       const right = (params.metaRight / 100) * viewW;
       const blockW = viewW - right - (colW ? colW + gap * 0.6 : 0) - blockX;
@@ -863,8 +880,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         textK,
         viewW,
         titleVw: titleVwNow(),
-        blockX: phone ? viewW * 0.5 - W * 0.5 : blockX,
-        blockW: phone ? W : blockW,
+        blockX: phone ? viewW * 0.5 - cardWidth * 0.5 : blockX,
+        blockW: phone ? cardWidth : blockW,
         blockY: viewH * 0.5,
         under: phone ? viewH * 0.5 + (W / Math.max(1, params.planeAspect)) / 2 + 0.035 * viewW : null,
         cardTop,
@@ -950,19 +967,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     // Up from the moment a close is asked for until the ring has it back, so
     // a second Escape or a click on the frame cannot start it twice.
     let closing = false;
-    // Going on to the next project from the foot of this one: where the
-    // scroll started and must end, which project, its full-size picture, and
-    // the next card's lean under the pointer.
     let advancing = false;
-    const adv = {
-      s0: 0,
-      s1: 1,
-      cell: -1,
-      img: null,
-      mix: 0,
-      hover: 0,
-      hoverTo: 0,
-    };
+    const transition = { a: 1 };
+    let advanceTl = null;
     // The name's flight to the page, and whether it is the page's yet. Once
     // landed, the layout loop keeps it on the page's scroll: it is never
     // handed off to a second element, so there is nothing to mismatch.
@@ -1147,6 +1154,12 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       t.needsUpdate = true;
       heroTex = t;
+      mediaAspects.set(PROJECTS[cell].file, img.width / img.height);
+      if (!advancing) {
+        refitOpen();
+        styleOpen();
+        rasterText();
+      }
       heroCell = cell;
       uniforms.uHero.value = t;
     };
@@ -1206,6 +1219,15 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         if (disposed || gen !== footage.gen) return;
         const va =
           liveEl.videoWidth / Math.max(1, liveEl.videoHeight) || 16 / 9;
+        mediaAspects.set(clip.src, va);
+        if (openI >= 0) {
+          for (const box of openEls.boxes) {
+            if (box?.dataset.video === clip.src) box.style.aspectRatio = String(va);
+          }
+          refitOpen();
+          styleOpen();
+          rasterText();
+        }
         const a = clip.aspect;
         liveFit.set(Math.min(1, a / va), Math.min(1, va / a));
         uniforms.uLive.value = liveTex;
@@ -1262,7 +1284,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // 本站适配：媒体只有一份全尺寸图，无 /sm 缩略副本，按 projects.js
       // 给出的全路径直接加载。
       Promise.all(
-        items.map((m) => loadImage(m.src, "high").catch(() => null)),
+        items.map((m) => m.video ? Promise.resolve(null) : loadImage(m.src, "high").catch(() => null)),
       ).then((imgs) => {
         if (disposed || gen !== moreGen) return;
         const canvas = document.createElement("canvas");
@@ -1271,23 +1293,20 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         const ctx = canvas.getContext("2d");
         imgs.forEach((img, k) => {
           if (!img) return;
-          const a = SHAPES[items[k].shape] ?? 1.5;
-          let sw = img.width;
-          let sh = img.height;
-          if (sw / sh > a) sw = sh * a;
-          else sh = sw / a;
-          ctx.drawImage(
-            img,
-            (img.width - sw) / 2,
-            (img.height - sh) / 2,
-            sw,
-            sh,
-            (k % cols) * cw,
-            Math.floor(k / cols) * ch,
-            cw,
-            ch,
-          );
+          const box = openTextRef.current.boxes[k];
+          if (box) {
+            mediaAspects.set(items[k].src, img.width / img.height);
+            const aspect = mediaAspects.get(items[k].video) ?? img.width / img.height;
+            box.style.aspectRatio = String(aspect);
+            box.style.maxWidth = `${viewH * 0.78 * aspect}px`;
+            box.style.width = "100%";
+            box.style.justifySelf = "center";
+          }
+          ctx.drawImage(img, 0, 0, img.width, img.height,
+            (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch);
         });
+        styleOpen();
+        rasterText();
         moreTex?.dispose();
         const t = new THREE.CanvasTexture(canvas);
         t.flipY = false;
@@ -1315,10 +1334,40 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       moreTex = null;
     };
 
+    const pauseDetailVideos = () => {
+      openRef.current?.querySelectorAll("video").forEach((video) => video.pause());
+    };
+    const fillVideo = (video, src, poster, label) => {
+      video.pause();
+      video.onloadedmetadata = null;
+      video.hidden = !src;
+      video.removeAttribute("src");
+      if (!src) { video.load(); return; }
+      video.poster = poster;
+      video.setAttribute("aria-label", label);
+      video.src = src;
+      video.onloadedmetadata = () => {
+        if (disposed || openI < 0 || closing || video.getAttribute("src") !== src) return;
+        const aspect = video.videoWidth / Math.max(1, video.videoHeight);
+        mediaAspects.set(src, aspect);
+        if (video !== openEls.heroVideo) video.parentElement.style.aspectRatio = String(aspect);
+        refitOpen();
+        styleOpen();
+        rasterText();
+      };
+      video.load();
+    };
+
     const setOpenCopy = (cell) => {
+      pauseDetailVideos();
+      liveStop();
+      footage.cur = null;
+      footage.mix = 0;
+      detailCell = cell;
       const p = PROJECTS[cell];
       if (!p) return;
       const els = openTextRef.current;
+      fillVideo(els.heroVideo, p.video, p.file, p.name);
       const idx = (c) => String(c + 1).padStart(2, "0");
       const total = idx(PROJECTS.length - 1);
       if (els.type) els.type.textContent = p.type;
@@ -1370,12 +1419,23 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         if (!fig) return;
         const m = media[k];
         fig.hidden = !m;
+        const box = els.boxes[k];
+        const video = box?.querySelector("video");
+        if (video) fillVideo(video, m?.video, m?.src, `${p.name}: ${m?.caption ?? ""}`);
+        if (box) {
+          if (m && !m.video) box.dataset.gl = "img";
+          else box.removeAttribute("data-gl");
+        }
         if (!m) return;
         fig.dataset.slot = slots[k];
         fig.dataset.shape = m.shape;
         fig.style.order = String(k * 2);
-        const box = els.boxes[k];
         if (box) {
+          // 清掉上一项目图片写下的内联尺寸，否则切换后新项目沿用旧宽度错排。
+          box.style.maxWidth = "";
+          box.style.width = "";
+          box.style.justifySelf = "";
+          box.style.aspectRatio = String(mediaAspects.get(m.video) ?? mediaAspects.get(m.src) ?? 1);
           box.dataset.cell = String(imageCount + k);
           box.dataset.video = m.video ?? "";
           box.setAttribute("aria-label", `${p.name}: ${m.caption}`);
@@ -1403,17 +1463,19 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
       // The way on: the next project down the ring, which is also the next
       // name down the column.
-      const n = (cell + 1) % PROJECTS.length;
+      const workCount = PROJECTS.filter((project) => project.slug !== "about").length;
+      const n = (cell + 1) % workCount;
       const q = PROJECTS[n];
       if (els.nextIdx) {
-        els.nextIdx.textContent = `Next \u2014 ${idx(n)} / ${total}`;
+        els.nextIdx.textContent = `Next \u2014 ${idx(n)} / ${String(workCount).padStart(2, "0")}`;
       }
       if (els.nextName) els.nextName.textContent = q.name;
-      if (els.nextImg) {
-        els.nextImg.dataset.cell = String(n);
-        els.nextImg.setAttribute("aria-label", q.name);
+      if (els.nextImage) {
+        els.nextImage.src = q.file;
+        els.nextImage.alt = q.name;
       }
       if (els.next) {
+        els.next.setAttribute("href", withBase(`/projects/${q.slug}/`));
         els.next.dataset.cell = String(n);
         els.next.setAttribute("aria-label", `Next project: ${q.name}`);
       }
@@ -1443,7 +1505,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const overlay = openRef.current;
       if (openI >= 0 || !interactive || !overlay) return;
       // 本站适配：About 卡是通往关于页的入口，点击直接跳转（不开覆盖层）。
-      // 注意 i 是飞机索引，项目身份要经 cellOf(signedOffset(i)) 转成 cell。
       if (PROJECTS[cellOf(signedOffset(i))]?.slug === "about") {
         window.location.assign(withBase("/about/"));
         return;
@@ -1452,15 +1513,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       closing = false;
       const cell = cellOf(signedOffset(i));
       setOpenCopy(cell);
-      // Measured once the copy is in — the statement's length moves
-      // everything under it — set onto the sheet, and put back to unseen.
       measurePage();
       rasterText();
       resetFx();
-      // The word that flies has to be this project's. If the ring has not
-      // shown it yet — the card was clicked as it arrived — it is shown now.
-      // The melt carries on while it flies, and the measurement is good
-      // regardless: the steady row takes the new word at once.
       if (announced !== cell) {
         meta.show(cell);
         announced = cell;
@@ -1469,13 +1524,14 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       overlay.scrollTop = 0;
       overlay.inert = false;
       overlay.setAttribute("aria-hidden", "false");
-      // From here the page, not the canvas, is what the pointer is over. It
-      // forwards its moves, so the hit test and the cursor carry on regardless.
       overlay.style.pointerEvents = "auto";
       paintCursor();
 
       openTl?.kill();
       openTl = buildOpenTimeline();
+      // 沉浸排版 + 明确路径：打开详情时把地址同步为 /projects/xxx/，
+      // 不整页跳转；独立页仅作为直接访问该地址时的落地页。
+      syncUrl(PROJECTS[cell]?.slug, true);
     };
 
     // The open as one timeline, built for whichever plane is open — so a close
@@ -1630,8 +1686,35 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       return tl;
     };
 
+    // 沉浸式覆盖层与地址栏同步：打开 pushState 到 /projects/xxx/，
+    // 切换 replaceState，关闭回到首页地址；浏览器后退关闭覆盖层。
+    let urlSynced = false;
+    const homeUrl = withBase("/");
+    const syncUrl = (slug, push) => {
+      if (!slug) return;
+      const url = withBase(`/projects/${slug}/`);
+      try {
+        if (push && !urlSynced) window.history.pushState({ ring: true }, "", url);
+        else window.history.replaceState({ ring: true }, "", url);
+        urlSynced = true;
+      } catch { /* 本地 file:// 等场景忽略 */ }
+    };
+    const restoreUrl = () => {
+      if (!urlSynced) return;
+      urlSynced = false;
+      try { window.history.replaceState(null, "", homeUrl); } catch { /* noop */ }
+    };
+    const onPopState = () => {
+      if (openI >= 0) {
+        urlSynced = false;
+        closeProject();
+      }
+    };
+
     const closeProject = () => {
       if (openI < 0 || !openTl || closing || advancing) return;
+      restoreUrl();
+      pauseDetailVideos();
       closing = true;
       const overlay = openRef.current;
       const dur = Math.max(0.05, params.closeTime);
@@ -1657,12 +1740,14 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
     // Hard reset for a replay or unmount: no animation, nothing left half-open.
     const resetOpen = () => {
+      pauseDetailVideos();
       openTl?.kill();
       openTl = null;
       openI = -1;
       closing = false;
       advancing = false;
-      gsap.killTweensOf(adv);
+      advanceTl?.kill();
+      transition.a = 1;
       opening.f = 0;
       hero.mix = 0;
       gsap.killTweensOf([pageA, titleGl]);
@@ -1700,68 +1785,35 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       }
     };
 
-    // The way on, from the foot of a project. The page keeps scrolling until
-    // the next project's name — set at this project's title size, on the same
-    // left edge — reaches the title's own place at the top, and its card
-    // grows on the same scroll into the hero's rect; everything else leaves
-    // through the lip with the scroll. At the end the two pages agree to the
-    // pixel, the same word in the same box and the same picture in the same
-    // rect, so the next project takes over in place: the ring is turned to it
-    // behind the page, the page is refilled, and the scroll goes back to the
-    // top. Nothing changes size and nothing cuts.
+    const onNext = (e) => {
+      // 覆盖层内的“下一项目”留在覆盖层内切换，保持与首次进入一致的排版；
+      // href 仍指向独立页，供新标签页/中键打开。
+      e.preventDefault();
+      const cell = Number(openTextRef.current.next?.dataset.cell ?? -1);
+      if (cell >= 0) advanceTo(cell);
+    };
+
     const advanceTo = (cell) => {
       const overlay = openRef.current;
-      const els = openTextRef.current;
-      if (openI < 0 || closing || advancing || opening.f < 1 || !overlay) {
-        return;
-      }
-      // 本站适配：下一张是 About 卡时直接进关于页（与环上点击一致）
-      if (PROJECTS[cell]?.slug === "about") {
+      if (disposed || openI < 0 || closing || advancing || opening.f < 1 || !overlay || !PROJECTS[cell]) return;
+      pauseDetailVideos();
+      if (PROJECTS[cell].slug === "about") {
         window.location.assign(withBase("/about/"));
         return;
       }
-      const nameIt = findIt(els.nextName);
-      const cardIt = findIt(els.nextImg);
-      const titleIt = findIt(els.title);
-      if (!nameIt || !cardIt || !titleIt) return;
+      if (planeOf(cell) < 0) return;
+      syncUrl(PROJECTS[cell].slug, false);
       advancing = true;
-      adv.cell = cell;
-      adv.s0 = overlay.scrollTop;
-      adv.s1 = nameIt.top - titleIt.top;
-      adv.img = null;
-      adv.mix = 0;
-      // Room to scroll that far: the page ends a little under the name.
-      const max = overlay.scrollHeight - overlay.clientHeight;
-      if (els.spacer && adv.s1 > max) {
-        els.spacer.style.height = `${Math.ceil(adv.s1 - max) + 2}px`;
-      }
-      // The scroll is the transition's own; the reader's wheel waits for it.
       overlay.style.overflowY = "hidden";
-      // Both pieces that travel are shown, wherever the reader was.
-      for (const it of [nameIt, cardIt]) {
-        gsap.killTweensOf(it);
-        it.rev = 1;
-        it.shown = true;
-      }
-      // The next picture at full size, decoded now and put on once it is the
-      // only thing on screen that could be wearing it.
-      const p = PROJECTS[cell];
-      if (p) {
-        loadImage(heroSrc(p.file), "high")
-          .then((img) => {
-            if (advancing && adv.cell === cell) adv.img = img;
-          })
-          .catch(() => {});
-      }
-      // The page's hairlines are DOM and cannot fold; they leave first.
-      gsap.to(els.body, { opacity: 0, duration: 0.45, ease: "power1.out" });
-      const d = Math.max(1, adv.s1 - adv.s0);
-      gsap.to(overlay, {
-        scrollTop: adv.s1,
-        duration: Math.min(2.2, 1.15 + d / 2400),
-        ease: "power3.inOut",
-        overwrite: true,
-        onComplete: () => finishAdvance(cell),
+      advanceTl = gsap.timeline();
+      advanceTl.to(transition, { a: 0, duration: 0.22, ease: "power1.inOut" });
+      advanceTl.call(() => {
+        if (!disposed && advancing) finishAdvance(cell);
+      });
+      advanceTl.to(transition, { a: 1, duration: 0.3, ease: "power1.out" });
+      advanceTl.call(() => {
+        advancing = false;
+        overlay.style.overflowY = "";
       });
     };
 
@@ -1809,7 +1861,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         opacity: 1,
       });
       if (glowRef.current) gsap.set(glowRef.current, { "--glow-on": 1 });
-      gsap.killTweensOf([els.body, adv]);
+      gsap.killTweensOf(els.body);
       opening.f = 0;
       titleGl.a = 0;
       pageA.a = 0;
@@ -1820,26 +1872,15 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       overlay.scrollTop = 0;
       openI = next;
       setOpenCopy(cell);
+      refitOpen();
+      styleOpen();
       measurePage();
       rasterText();
       resetFx();
       if (heroCell !== cell) loadHero(cell);
-      advancing = false;
       // Its own timeline, run to the end at once: its close is its flight.
       openTl = buildOpenTimeline();
       openTl.progress(1);
-    };
-
-    const onNext = () => {
-      const cell = Number(openTextRef.current.next?.dataset.cell ?? -1);
-      if (cell >= 0) advanceTo(cell);
-    };
-    // The next card leans in a touch while the row is offered.
-    const onNextIn = () => {
-      adv.hoverTo = 1;
-    };
-    const onNextOut = () => {
-      adv.hoverTo = 0;
     };
 
     const returnOverview = () => {
@@ -1880,7 +1921,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     window.addEventListener("pointerdown", onKeysOff, true);
     // A hidden tab stops the loop but not a playing video.
     const onVisibility = () => {
-      if (document.hidden) liveEl.pause();
+      if (document.hidden) { liveEl.pause(); pauseDetailVideos(); }
       else if (footage.cur && liveEl.src) liveEl.play().catch(() => {});
     };
     document.addEventListener("visibilitychange", onVisibility);
@@ -2019,7 +2060,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       spinVel = Math.max(-params.maxSpeed, Math.min(params.maxSpeed, spinVel));
     };
 
+    let activePointer = null;
     const onPointerDown = (e) => {
+      if (!e.isPrimary || e.button !== 0 || activePointer !== null) return;
+      if (hostRef.current.paused || !interactive || openI >= 0) return;
+      activePointer = e.pointerId;
       pointerTravel = 0;
       travelX = e.clientX;
       travelY = e.clientY;
@@ -2038,14 +2083,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     };
 
     const onPointerMove = (e) => {
+      if (activePointer !== null && e.pointerId !== activePointer) return;
       trackPointer(e);
-
-      // From coordinates, not movementX/Y: those are zero for touch in Safari,
-      // which would make every swipe look stationary and end in a tap.
-      pointerTravel +=
-        Math.abs(e.clientX - travelX) + Math.abs(e.clientY - travelY);
-      travelX = e.clientX;
-      travelY = e.clientY;
+      if (activePointer !== null) pointerTravel = Math.hypot(e.clientX - travelX, e.clientY - travelY);
       // Only before the hold takes. After that, moving drags the ring and the
       // melt together, same as a drag with the cursor down.
       if (coarse && !held && pointerTravel > params.touchSlop) endHold();
@@ -2068,6 +2108,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     };
 
     const onPointerUp = (e) => {
+      if (e.pointerId !== activePointer) return;
+      pointerTravel = Math.hypot(e.clientX - travelX, e.clientY - travelY);
+      activePointer = null;
       // Releasing the capture fires a leave at the container even though the
       // cursor never went anywhere, so re-track before anything else.
       trackPointer(e);
@@ -2106,10 +2149,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     pageEl?.addEventListener("pointermove", trackPointer);
     pageEl?.addEventListener("pointerdown", trackPointer);
     pageEl?.addEventListener("pointerleave", onPointerLeave);
-    openEls.next?.addEventListener("click", onNext);
-    openEls.next?.addEventListener("pointerenter", onNextIn);
-    openEls.next?.addEventListener("pointerleave", onNextOut);
-
+    openTextRef.current.next?.addEventListener("click", onNext);
+    window.addEventListener("popstate", onPopState);
     const updatePointer = (dt) => {
       // Held off until the entry finishes, so the cursor cannot soften the
       // ring while the timeline is still drawing it.
@@ -2400,8 +2441,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // is why the window fit rides in here rather than on a dozen params.
       const shift = clamp01(state.shift);
       if (glowRef.current) {
-        const mode = shift < 0.01 ? "overview" : "project";
-        if (mode === "overview") {
+        const mode = shift === 0 ? "overview" : "project";
+        glowRef.current.style.setProperty("--room-shift", String(shift));
+        if (shift < 1) {
           const time = motionQuery?.matches ? 0 : uniforms.uTime.value;
           haloSeeds.forEach((seed, i) => {
             const t = time * (0.22 + i * 0.019);
@@ -2541,6 +2583,16 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const scrollY =
         openI >= 0 && openRef.current ? openRef.current.scrollTop : 0;
       tickFx(scrollY);
+      if (openEls.body) openEls.body.style.opacity = String(pageA.a * transition.a);
+      const heroVideo = openEls.heroVideo;
+      if (heroVideo && !heroVideo.hidden) {
+        Object.assign(heroVideo.style, {
+          left: `${openRect.left - (params.metaLeft / 100) * viewW}px`,
+          top: `${openRect.top}px`, width: `${openRect.w}px`, height: `${openRect.h}px`,
+          opacity: String(titleGl.a * transition.a),
+          pointerEvents: opening.f === 1 && !closing && !advancing ? "auto" : "none",
+        });
+      }
       // Close sits over the page; once the page has moved under it, a halo of
       // the paper comes up round it so what passes under fades rather than
       // being cut at its rim — on a phone that is every line of text.
@@ -2549,46 +2601,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         haloAt = halo;
         closeEl.style.setProperty("--halo", halo.toFixed(2));
       }
-      // The way on, mid-flight: how far the scroll has carried it, and the
-      // next card's rect on its way to the hero's. The growth runs over the
-      // last stretch of the scroll only, so from far up a page the card does
-      // not start growing until everything above it has gone.
-      let advQ = 0;
-      let advG = 0;
-      let advDx = 0;
-      let advName = null;
-      let advCard = null;
-      const advRect = { x: 0, y: 0, w: 1, h: 1 };
-      adv.hover += (adv.hoverTo - adv.hover) * chase(dt, 0.12);
-      if (advancing) {
-        const els = openTextRef.current;
-        advName = findIt(els.nextName);
-        advCard = findIt(els.nextImg);
-        const titleIt = findIt(els.title);
-        advQ = clamp01((scrollY - adv.s0) / Math.max(1, adv.s1 - adv.s0));
-        const span = Math.max(1, Math.min(adv.s1 - adv.s0, viewH * 0.9));
-        const gq = clamp01(1 - (adv.s1 - scrollY) / span);
-        advG = gq * gq * (3 - 2 * gq);
-        if (advName && titleIt) advDx = (titleIt.left - advName.left) * advG;
-        if (advCard) {
-          const y0 = advCard.top - scrollY;
-          // In stacked layout both pieces keep the cover-first order; ease
-          // only the remaining cover offset after the name's scroll lands.
-          const yEnd = viewW < 900 ? advCard.top - adv.s1 : y0;
-          advRect.x = advCard.left + (openRect.left - advCard.left) * advG;
-          advRect.y = y0 + (openRect.top - yEnd) * advG;
-          advRect.w = advCard.w + (openRect.w - advCard.w) * advG;
-          advRect.h = advCard.h + (openRect.h - advCard.h) * advG;
-        }
-        // Its full-size picture goes on once it is growing, by which point
-        // the open card is off the top of the window.
-        if (advG > 0 && adv.img && heroCell !== adv.cell) {
-          heroGen++;
-          heroSet(adv.cell, adv.img);
-          gsap.to(adv, { mix: 1, duration: 0.35, ease: "power1.inOut" });
-        }
-      }
-
       const growX = 1 + (openRect.w / cardW - 1) * grow;
       const growY = 1 + (openRect.h / cardH - 1) * grow;
       const openAspect = (params.planeAspect * growX) / growY;
@@ -2596,23 +2608,15 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // picture has arrived, so the atlas cell is never stretched to the
       // hero's aspect while it loads. During an advance, once the next card
       // is growing, crop and picture are its instead.
-      if (advancing && advG > 0) {
-        const a = advRect.w / Math.max(1, advRect.h);
-        uniforms.uHeroP.value.set(
-          adv.cell,
-          heroCell === adv.cell ? adv.mix : 0,
-          Math.min(1, a / params.planeAspect),
-          Math.min(1, params.planeAspect / a),
-        );
-      } else {
+      const sourceAspect = heroTex?.image ? heroTex.image.width / heroTex.image.height : params.planeAspect;
+      uniforms.uDetail.value.set(openI >= 0 ? cellOf(signedOffset(openI)) : -1, grow);
         const openCell = openI >= 0 ? cellOf(signedOffset(openI)) : -1;
         uniforms.uHeroP.value.set(
           openCell,
           heroCell === openCell ? hero.mix : 0,
-          Math.min(1, openAspect / params.planeAspect),
-          Math.min(1, params.planeAspect / openAspect),
+          Math.min(1, openAspect / sourceAspect),
+          Math.min(1, sourceAspect / openAspect),
         );
-      }
 
       // The footage. On the ring, the front card's clip once the ring has
       // rested with it there. Opening, closing or going on, the open card's
@@ -2623,41 +2627,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // clip already playing carries on when it is wanted again, which is
       // what lets a close hand the hero's clip back to the ring.
       let want = null;
-      if (liveOk()) {
-        if (openI >= 0) {
-          const openCell = cellOf(signedOffset(openI));
-          if (advancing) {
-            want = advG > 0 ? cardClip(adv.cell) : null;
-          } else if (opening.f < 1 || closing) {
-            want = cardClip(openCell);
-          } else {
-            const seen = (top, h) =>
-              Math.max(0, Math.min(viewH, top + h) - Math.max(0, top)) /
-              Math.max(1, Math.min(h, viewH));
-            let best = 0.5;
-            const hc = cardClip(openCell);
-            if (hc) {
-              const v = seen(openRect.top - scrollY, openRect.h);
-              if (v > best) {
-                best = v;
-                want = hc;
-              }
-            }
-            for (const it of fx.imgs) {
-              if (!it.video || it.rev < 0.6) continue;
-              const v = seen(it.top - scrollY, it.h);
-              if (v > best) {
-                best = v;
-                want = {
-                  key: `page:${it.video}`,
-                  cell: it.cell,
-                  src: it.video,
-                  aspect: it.w / Math.max(1, it.h),
-                };
-              }
-            }
-          }
-        } else {
+      if (liveOk() && openI < 0) {
           const calm =
             interactive &&
             !dragging &&
@@ -2673,7 +2643,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           ) {
             want = cardClip(shown);
           }
-        }
       }
       if ((want?.key ?? "") !== (footage.cur?.key ?? "")) {
         footage.mix = Math.max(
@@ -2690,6 +2659,12 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           1,
           footage.mix + dt / Math.max(0.05, params.liveFade),
         );
+      }
+      if (footage.ready && footage.cur) {
+        const va = liveEl.videoWidth / Math.max(1, liveEl.videoHeight);
+        const target = openI >= 0 && footage.cur.key.startsWith("card:") ? openAspect :
+          (fx.imgs.find((it) => it.cell === footage.cur.cell)?.w / Math.max(1, fx.imgs.find((it) => it.cell === footage.cur.cell)?.h ?? 1) || params.planeAspect);
+        liveFit.set(Math.min(1, target / va), Math.min(1, va / target));
       }
       uniforms.uLiveP.value.set(
         footage.cur ? footage.cur.cell : -1,
@@ -2851,7 +2826,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         uniforms.uScale.value[i].set(
           sx * sw * osx,
           sy * sw * osy,
-          1 - params.sideDim * sideF[i],
+          (1 - params.sideDim * sideF[i]) * (i === openI ? transition.a * (PROJECTS[detailCell]?.video ? 1 - titleGl.a : 1) : 1),
           cell,
         );
 
@@ -2877,11 +2852,12 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // The page's pictures: planes on the boxes the DOM laid out for them,
       // offset by the scroll, born in place with the seed's own curves as
       // they are scrolled to and un-born with the page when it closes.
+      uniforms.uNextP.value.set(-1, -1);
       const pageN = openI >= 0 ? fx.imgs.length : 0;
       for (let k = 0; k < pageN; k++) {
         const it = fx.imgs[k];
         const i = count + k;
-        const r = Math.min(it.rev, pageA.a);
+        const r = Math.min(it.rev, pageA.a) * transition.a;
         const bsx = easeOutCubic(clamp01(r / 0.7));
         const bsy = easeOutCubic(clamp01((r - 0.18) / 0.74));
         // Exactly on the box the DOM gave it: a picture that drifted against
@@ -2890,17 +2866,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         let py = viewH * 0.5 - (it.top + it.h * 0.5 - scrollY);
         let pw = it.w;
         let ph = it.h;
-        if (it === advCard) {
-          // On its way to being the next hero.
-          pw = advRect.w;
-          ph = advRect.h;
-          px = advRect.x + pw * 0.5 - viewW * 0.5;
-          py = viewH * 0.5 - (advRect.y + ph * 0.5);
-        } else if (it.el === openTextRef.current.nextImg) {
-          const lean = 1 + 0.03 * adv.hover;
-          pw *= lean;
-          ph *= lean;
-        }
         rest[i].set(px, py);
         uniforms.uPos.value[i].set(px, py);
         uniforms.uRot.value[i] = 0;
@@ -2938,14 +2903,6 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           let a = (it.title ? titleGl.a : it.rev * pageA.a) * (it.inkA ?? 1);
           const rise = it.title ? 0 : (1 - it.rev) * 28;
           let cx = it.left + it.boxW * 0.5 - viewW * 0.5;
-          if (advancing) {
-            // The next name rides the scroll up to the title's place; the
-            // label over it would end up in the lip, so it goes first.
-            if (it === advName) cx += advDx;
-            else if (it.el === openTextRef.current.nextIdx) {
-              a *= 1 - smoothstep(0, 0.35, advQ);
-            }
-          }
           const cy = viewH * 0.5 - (it.top + it.boxH * 0.5 - scrollY + rise);
           uniforms.uTextRect.value[tn].set(
             cx,
@@ -2959,7 +2916,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
             it.uv[2],
             it.uv[3],
           );
-          uniforms.uTextA.value[tn] = a;
+          uniforms.uTextA.value[tn] = a * transition.a;
           tn++;
         }
       }
@@ -2973,7 +2930,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
             it.left - viewW * 0.5,
             it.left + it.w - viewW * 0.5,
             viewH * 0.5 - (it.top - scrollY),
-            fx.ruleA * pageA.a,
+            fx.ruleA * pageA.a * transition.a,
           );
         }
       }
@@ -3732,9 +3689,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       pageEl?.removeEventListener("pointermove", trackPointer);
       pageEl?.removeEventListener("pointerdown", trackPointer);
       pageEl?.removeEventListener("pointerleave", onPointerLeave);
-      openEls.next?.removeEventListener("click", onNext);
-      openEls.next?.removeEventListener("pointerenter", onNextIn);
-      openEls.next?.removeEventListener("pointerleave", onNextOut);
+      openTextRef.current.next?.removeEventListener("click", onNext);
+      window.removeEventListener("popstate", onPopState);
       if (pageEl) gsap.killTweensOf(pageEl);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keydown", onKeysOn);
@@ -3946,6 +3902,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
             className="relative open-first"
             style={{ minHeight: "var(--h-hero)", paddingTop: "var(--y-info)" }}
           >
+            <video
+              ref={(el) => { openTextRef.current.heroVideo = el; }}
+              className="detail-video detail-hero-video"
+              controls playsInline preload="metadata" hidden
+            />
             <div className="open-info" style={{ marginLeft: "var(--x-info)", width: "var(--w-info)" }}>
             <div
               ref={(el) => {
@@ -4057,7 +4018,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
                     role="img"
                     data-gl="img"
                     className="media-box"
-                  />
+                  >
+                    <video className="detail-video" controls playsInline preload="metadata" hidden />
+                  </div>
                 </figure>
               ))}
               {/* Three insights, a numbered row between the opening pictures
@@ -4097,51 +4060,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
             {/* The way on: the next project's name at the size of this one's,
                 its card beside it, the whole row one button. */}
-            <div
-              data-gl="rule"
-              className="mt-[18vh] mb-[10vh] border-t border-transparent pt-[3vh]"
-            >
-              <button
-                ref={(el) => {
-                  openTextRef.current.next = el;
-                }}
-                type="button"
-                className="block w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-left text-(--ink) focus-visible:outline-none"
-              >
-                <span
-                  ref={(el) => {
-                    openTextRef.current.nextIdx = el;
-                  }}
-                  data-gl="text"
-                  className="block opacity-0"
-                  style={MICRO}
-                />
-                {/* Match the detail's cover-first order below its 900px breakpoint. */}
-                <span className="mt-[2.4vh] flex flex-col items-start gap-[2.4vh] min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between min-[900px]:gap-[3vw]">
-                  <span
-                    ref={(el) => {
-                      openTextRef.current.nextName = el;
-                    }}
-                    data-gl="text"
-                    className="order-2 block shrink-0 leading-[1.15] tracking-[-0.03em] opacity-0 [overflow-wrap:anywhere] min-[900px]:order-1"
-                    style={{
-                      width: "var(--w-info)",
-                      fontFamily: "var(--f-head)",
-                      fontSize: "var(--t-title)",
-                      fontWeight: "var(--w-head)",
-                    }}
-                  />
-                  <span
-                    ref={(el) => {
-                      openTextRef.current.nextImg = el;
-                    }}
-                    role="img"
-                    data-gl="img"
-                    className="order-1 block aspect-[3/2] w-full shrink-0 min-[900px]:order-2 min-[900px]:w-[26%]"
-                  />
-                </span>
-              </button>
-            </div>
+            <NextProject
+              linkRef={(el) => { openTextRef.current.next = el; }}
+              titleRef={(el) => { openTextRef.current.nextName = el; }}
+              imageRef={(el) => { openTextRef.current.nextImage = el; }}
+            />
           </div>
 
           {/* Room for the way on to scroll the next name up to the title's
@@ -4157,20 +4080,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         {/* Close: a disc of the page's own colour with a hairline ring and a
             cross, styled in globals.css. Drawn in by the open timeline.
             Fixed, so it stays put while the page scrolls under it. */}
-        <button
-          ref={closeRef}
-          type="button"
-          aria-label="Close"
-          className="close pointer-events-auto fixed"
-          style={{ right: "var(--x-mr)", top: "var(--y-close)" }}
-        >
-          <span className="close-disc" aria-hidden="true">
-            <span className="close-x">
-              <span className="close-stroke" />
-              <span className="close-stroke" />
-            </span>
-          </span>
-        </button>
+
       </div>
 
       {/* 001 to 100. Holds the entry at the seed until it gets there. */}

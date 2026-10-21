@@ -1,7 +1,7 @@
 import type { AIProject } from "../data/project-data";
 import { projects } from "../data/project-data";
 import { PageFooter, PageHeader } from "./mpa-chrome";
-import { withBase } from "../lib/base";
+import NextProject from "./next-project";
 
 const AIProjectPage = ({ project }: { project: AIProject }) => {
   const next = projects[project.next];
@@ -13,7 +13,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
         <article className="mpa-project">
           <header className="mpa-project-hero">
             <figure className="mpa-project-cover">
-              <img src={project.cover} alt={project.title} />
+              <img src={project.cover} alt={project.title} style={{ viewTransitionName: "project-cover" }} />
             </figure>
             <div className="mpa-project-intro">
               <p className="mpa-kicker">{project.kicker}</p>
@@ -64,16 +64,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
             })}
           </section>
 
-          <a className="mpa-next" href={withBase(`/projects/${next.slug}/`)}>
-            <div>
-              <p className="mpa-kicker">NEXT PROJECT</p>
-              <h2 className="mpa-next-title">{next.title}</h2>
-            </div>
-            <img src={next.cover} alt={next.title} loading="lazy" />
-            <span className="mpa-next-cta">
-              查看 <span aria-hidden="true">↗</span>
-            </span>
-          </a>
+          <NextProject project={next} />
         </article>
       </main>
       <PageFooter />
