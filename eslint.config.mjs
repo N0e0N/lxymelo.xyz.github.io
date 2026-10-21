@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     "dist/**",
     "out/**",
     "build/**",
+    // 移植的 WebGL 机器（参考站原样代码，非本站维护范围）
+    "src/carousel/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

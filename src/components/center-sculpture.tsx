@@ -151,7 +151,7 @@ export default function CenterSculpture({ spinRef }: { spinRef: MutableRefObject
     if ("requestIdleCallback" in window) {
       window.requestIdleCallback(init, { timeout: 2500 });
     } else {
-      window.setTimeout(init, 1500);
+      globalThis.setTimeout(init, 1500);
     }
 
     return () => {

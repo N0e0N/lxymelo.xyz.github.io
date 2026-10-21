@@ -20,7 +20,13 @@ const projectInputs = projectSlugs.reduce<Record<string, string>>((acc, slug) =>
 }, {});
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {
+    name: "site-canonical",
+    transformIndexHtml(_html, context) {
+      const path = context.path.replace(/index\.html$/, "");
+      return [{ tag: "link", attrs: { rel: "canonical", href: `https://www.lxymelo.xyz${path}` }, injectTo: "head" }];
+    },
+  }],
   // 自定义域名 www.lxymelo.xyz 根路径访问
   base: "/",
   server: {
