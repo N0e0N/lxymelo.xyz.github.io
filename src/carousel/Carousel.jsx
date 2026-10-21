@@ -16,6 +16,7 @@ import { buildAtlas, loadImage } from "./ring/atlas";
 import { createMeta } from "./ring/meta";
 import { createSplitText } from "./ring/splitText";
 import { createBeadWord } from "./ring/bead";
+import { createCodeField } from "./ring/codeField";
 import { defaultParams, THEMES, SONG } from "./ring/params";
 import { IMAGE_FILES, PROJECTS } from "./ring/projects";
 import {
@@ -94,6 +95,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
   // everything. There is no site chrome: the ring is the page.
   const countRef = useRef(null);
   const glowRef = useRef(null);
+  const codeFieldRef = useRef(null);
   const grainRef = useRef(null);
   const liveRef = useRef(null);
   const cutRef = useRef(null);
@@ -168,6 +170,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     hostRef.current.onAvailabilityChange?.(true);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
+    const codeField = createCodeField(codeFieldRef.current);
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -100, 100);
@@ -2364,6 +2367,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     };
 
     const haloSeeds = Array.from({ length: 7 }, () => Math.random() * 1000);
+    const fieldHalos = haloSeeds.map(() => ({ x: 0, y: 0, rx: 1, ry: 1 }));
     const haloNoise = (t, seed) => {
       const n = Math.floor(t);
       const f = t - n;
@@ -2426,11 +2430,26 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           const time = motionQuery?.matches ? 0 : uniforms.uTime.value;
           haloSeeds.forEach((seed, i) => {
             const t = time * (0.22 + i * 0.019);
+            const x = haloNoise(t, seed);
+            const y = haloNoise(t + 13, seed + 7);
+            const w = 22 + haloNoise(t + 29, seed + 19) * 22;
+            const h = 20 + haloNoise(t + 41, seed + 31) * 25;
             const style = glowRef.current.style;
-            style.setProperty(`--halo-${i}-x`, `${haloNoise(t, seed) * 100}%`);
-            style.setProperty(`--halo-${i}-y`, `${haloNoise(t + 13, seed + 7) * 100}%`);
-            style.setProperty(`--halo-${i}-w`, `${22 + haloNoise(t + 29, seed + 19) * 22}vmax`);
-            style.setProperty(`--halo-${i}-h`, `${20 + haloNoise(t + 41, seed + 31) * 25}vmax`);
+            style.setProperty(`--halo-${i}-x`, `${x * 100}%`);
+            style.setProperty(`--halo-${i}-y`, `${y * 100}%`);
+            style.setProperty(`--halo-${i}-w`, `${w}vmax`);
+            style.setProperty(`--halo-${i}-h`, `${h}vmax`);
+            // CSS percentage background positions refer to the remaining
+            // space after the image size; include the pseudo-element inset.
+            const vmax = Math.max(viewW, viewH) / 100;
+            const pixelW = w * vmax;
+            const pixelH = h * vmax;
+            Object.assign(fieldHalos[i], {
+              x: (viewW + 64 - pixelW) * x - 32 + pixelW * (i === 0 ? 0.38 : 0.5),
+              y: (viewH + 64 - pixelH) * y - 32 + pixelH * (i === 0 ? 0.57 : 0.5),
+              rx: pixelW * 0.5,
+              ry: pixelH * 0.5,
+            });
           });
         }
         if (glowRef.current.dataset.mode !== mode) {
@@ -2479,6 +2498,12 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const faceEdge = params.radial ? W : shortEdge;
 
       const R = params.ringRadius * radiusK * g;
+      codeField.draw({
+        time: uniforms.uTime.value, halos: fieldHalos, width: viewW, height: viewH,
+        aperture: { x: ringCentre.x, y: ringCentre.y, radius: Math.max(1, R - Math.max(cardW, cardH) * 0.65) },
+        opacity: (1 - shift) * smoothstep(0.4, 1, state.spread),
+        reducedMotion: Boolean(motionQuery?.matches),
+      });
       const restingGap = 2 * R * Math.sin(step / 2) - sepExtent;
       info.restingGap = Math.round((restingGap / g) * 10) / 10;
       // The whole stretch plays out across this, so it is the yardstick.
@@ -3648,6 +3673,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);
+      codeField.dispose();
 
       window.removeEventListener("resize", onResize);
       container.removeEventListener("wheel", onWheel);
@@ -3726,7 +3752,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         aria-hidden="true"
         className="room pointer-events-none fixed inset-0 -z-20"
         style={{ transition: "--glow 1.6s ease" }}
-      />
+      >
+        <canvas ref={codeFieldRef} className="ambient-code-field" aria-hidden="true" />
+      </div>
 
       {/* 01 / 18, over the discipline beside the card. Placed by meta.style
           with the block, hidden from the tree because the live region says

@@ -14,6 +14,7 @@ export default function Home() {
     <>
       <PageHeader />
       <main id="main-content" tabIndex={-1}>
+        <h1 className="sr-only">LXY · AI 与设计作品</h1>
         <div hidden={!available}>
           <Carousel paused={indexOpen} controlsRef={controls} onViewChange={setView} onAvailabilityChange={setAvailable} />
         </div>

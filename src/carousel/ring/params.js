@@ -170,8 +170,8 @@ export function defaultParams() {
     toneGain: 1,
 
     // -- the intro heading, in the scene ---------------------------------
-    // 本站适配：中文标题；字号按汉字宽度重新取（参考值为拉丁文 "Works '26"）
-    text: "作品集",
+    // The overview identity is now the halo-revealed code monogram.
+    text: "",
     textSize: 56,
     // 本站适配：标题改宋体（见文件顶的 SONG）；fallback 收尾到 serif
     textFont: SONG,

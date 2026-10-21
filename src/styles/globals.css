@@ -938,3 +938,6 @@ button, a { touch-action: manipulation; }
   .mpa-next-arrow { grid-column: 2; grid-row: 2; font-size: 52px; justify-self: end; }
 }
 @media (prefers-reduced-motion: reduce) { .mpa-next-arrow, .mpa-next .mpa-next-art img { transition: none; } }
+
+/* Decorative code is clipped by actual halo intersections in its 2D field. */
+.ambient-code-field { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; pointer-events: none; user-select: none; mix-blend-mode: normal; }
