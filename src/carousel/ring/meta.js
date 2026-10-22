@@ -183,7 +183,7 @@ export function createMeta(refs, params) {
     under,
     cardTop,
   }) => {
-    const gapPx = (params.titleGap / 100) * (viewW * 0.65);
+    const gapPx = Math.max(under != null ? 24 : 0, (params.titleGap / 100) * (viewW * 0.65));
     const titlePx = (titleVw * viewW) / 100;
     // In px with floors: in vw alone the small type fell to 6px on a phone.
     const metaPx = Math.max(

@@ -64,7 +64,7 @@ export const THEMES = {
 // 本站适配：全站宋体。各平台宋体族 + serif 回退。
 // 注意：机器原先以 `"${params.X}"` 单族引号包裹来构建字体串，
 // meta.js / splitText.js / bead.js / Carousel.jsx 已相改为直接插入完整栈。
-export const SONG = `"SimSun", "Songti SC", "STSong", "Noto Serif SC"`;
+export const SONG = `"Portfolio Songti", "SimSun", "Songti SC", "STSong", "Noto Serif SC"`;
 
 // 本站适配：卡片宽高比（宽/高）。海报为竖图（3:4），卡片改竖版：
 // 0.75 即 3:4 竖卡（长边为高）。机器多处据此推导卡片宽高、hero
@@ -94,8 +94,8 @@ export function defaultParams() {
     // front card a share of the width on the centre line and the ring big
     // enough that its neighbours sit half in the lip.
     tightRadius: 0.82, // multiplies narrowRadius, for the ring as it forms
-    tightCard: 0.8, // the front card's width at rest, of the window's
-    tightSpacing: 0.54, // its neighbours' distance from it, of the window's height
+    tightCard: 0.68, // the front card's width at rest, of the window's
+    tightSpacing: 0.68, // its neighbours' distance from it, of the window's height
     tightSplit: 0.8, // the heading, competing with the ring for centre screen
 
     // -- geometry, all at the reference window ---------------------------

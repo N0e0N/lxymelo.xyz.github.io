@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 /* 移植自参考站 Viscose-carousel：作品之轮的机器样式。
     adaptations: 字体指向 /fonts/；不全局锁滚动（本站为 MPA，
@@ -24,12 +25,10 @@
   --breakpoint-wide: 1025px;
   /* And the first width above the phone band (tightAt, 640 inclusive). */
   --breakpoint-tablet: 641px;
-  --font-sans: "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
+  --font-sans: "Portfolio Songti", "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
 }
 
-/* 本站适配：全站宋体，不再加载任何 Web 字体（参考站的 Satoshi / Geist /
-   PP Neue Montreal 三族四款已从 public/fonts 删除）。各平台宋体族 +
-   serif 回退，与 ring/params.js 的 SONG 常量保持一致。 */
+/* Self-hosted Songti subsets keep Android and WeChat typography consistent. */
 
 /* The room. Defaults here so the first paint is right; overwritten at mount
    from params.paper / params.ink so the dev panel can retheme live.
@@ -275,9 +274,9 @@ canvas {
    全部颜色走 --paper/--ink，跟随主题开关（当前为浅色房间）。 */
 :root {
   /* 本站适配：全站宋体（同 ring/params.js 的 SONG） */
-  --f-display: "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
-  --f-body: "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
-  --f-micro: "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
+  --f-display: "Portfolio Songti", "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
+  --f-body: "Portfolio Songti", "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
+  --f-micro: "Portfolio Songti", "SimSun", "Songti SC", "STSong", "Noto Serif SC", serif;
   --hairline: color-mix(in srgb, var(--ink) 15%, transparent);
 }
 
@@ -941,3 +940,7 @@ button, a { touch-action: manipulation; }
 
 /* Decorative code is clipped by actual halo intersections in its 2D field. */
 .ambient-code-field { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; pointer-events: none; user-select: none; mix-blend-mode: normal; }
+
+.home-help > .home-back { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 10px 20px; border: 1px solid var(--hairline); border-radius: 999px; font-family: var(--f-body); font-size: 15px; background: var(--paper); -webkit-appearance: none; appearance: none; box-shadow: 0 3px 14px rgb(22 20 15 / 5%); }
+.home-help > .home-back:hover { text-decoration: none; background: var(--ink); color: var(--paper); }
+@media (max-width: 640px) { .home-help > .home-back { border-radius: 999px; font-size: 14px; min-width: 86px; padding: 9px 18px; } }

@@ -21,7 +21,7 @@ export default function Home() {
         {available ? <>
           <div className="home-help" hidden={view === "detail"}>
             {view === "focused" ?
-              <button className="site-control" onClick={() => controls.current?.overview()}>← 返回圆环</button> :
+              <button className="site-control home-back" aria-label="返回圆环" onClick={() => controls.current?.overview()}><span aria-hidden="true">←</span> back</button> :
               <p className="home-touch-hint">拖动圆环 · 轻点作品查看</p>}
             <button className="site-control" onClick={() => setIndexOpen(true)}>作品列表 ↗</button>
           </div>

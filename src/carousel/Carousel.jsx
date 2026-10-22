@@ -502,7 +502,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         const atRest =
           (params.tightSpacing * viewH) /
           (2 * Math.sin(Math.PI / Math.max(3, Math.round(params.count))));
-        const card = Math.min(params.tightCard * viewW, viewH * 0.5 * Math.min(1, params.planeAspect));
+        const card = Math.min(params.tightCard * viewW, viewH * 0.42 * Math.min(1, params.planeAspect));
         tightEnd = Math.max(1, atRest / formed);
         // 竖版：前排卡的宽 = 长边 × planeAspect，planeK 按宽反推
         planeK = card / tightEnd / (params.planeSize * params.planeAspect * fit);
@@ -2158,11 +2158,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         cursor.x,
         cursor.y,
         cursor.amt,
-        params.melt * fit,
+        tightNow ? 0 : params.melt * fit,
       );
       uniforms.uMelt.value.set(
         params.meltReach * fit,
-        params.wave * fit * cursor.wake * cursor.amt,
+        tightNow ? 0 : params.wave * fit * cursor.wake * cursor.amt,
         params.waveFreq,
         params.waveSpeed,
       );
@@ -2547,7 +2547,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
       order.length = 0;
 
-      const track = cursor.amt > 0.001;
+      const track = !tightNow && cursor.amt > 0.001;
       const reach = Math.max(1, params.reach * W);
       const sideReach = Math.max(1, params.sideReach * W);
       // Asymmetric on purpose: the ring takes up a lean quickly and lets go
@@ -2746,7 +2746,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
         const motion = cardMotion[i];
         const motionTime = uniforms.uTime.value * motion.speed + motion.phase;
-        const motionWeight = motionQuery?.matches || openI >= 0 || picking
+        const motionWeight = motionQuery?.matches || openI >= 0 || picking || tightNow
           ? 0
           : smoothstep(0.9, 1, spread) * (0.15 + scrollAdhesion * 0.85);
         const amplitude = W * 0.18 * motion.amplitude * motionWeight;
@@ -2963,7 +2963,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // while dragging, when what is under the pointer keeps changing, so
       // there it stays a drop riding on top. Coming out, it closes back into
       // a drop and pulls a thread of honey out of the card after it.
-      const mouse = !coarse && openI < 0;
+      const mouse = !coarse && !tightNow && openI < 0;
       if (mouse !== bead.on) {
         bead.on = mouse;
         paintCursor();
@@ -3250,7 +3250,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       for (let l = linkCount; l < MAX_LINKS; l++) {
         uniforms.uLinkPar.value[l].set(-100, -100, 0, 0);
       }
-      uniforms.uLinkCount.value = linkCount;
+      // Small screens need discrete cards, including while dragging.
+      uniforms.uLinkCount.value = tightNow ? 0 : linkCount;
 
       // Both are px into the distance field, so they scale with the ring or
       // the merge reads as a different material at a different window size.
@@ -3267,6 +3268,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         (params.goo * planeK * fit * gooK +
           params.openMelt * fit * pulse * openOut) *
         (advancing ? 0.1 : 1);
+      if (tightNow) uniforms.uK.value = Math.min(uniforms.uK.value, 2 * (1 - shift) + 0.6 * shift);
       uniforms.uWobble.value =
         params.wobble * fit * (1 - smoothstep(0.2, 0.95, state.progress)) +
         params.openWobble * fit * pulse;
@@ -3278,7 +3280,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       uniforms.uBlend.value = Math.max(0.5, params.blend * planeK * g);
 
       // 手机详情优先保证正文可读，关闭屏幕边缘的玻璃折射。
-      const on = params.glass && !(viewW <= 640 && openI >= 0);
+      const on = params.glass && !tightNow;
       uniforms.uBandTop.value = on ? params.bandTop * viewH : 0;
       uniforms.uBandBottom.value = on ? params.bandBottom * viewH : 0;
       uniforms.uGlass.value.set(
@@ -3436,12 +3438,27 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       replay();
     };
 
-    // fonts.ready is reliable, but nothing here is worth a permanently blank
-    // page if it ever is not.
+    // The Latin/UI subsets are preloaded. Explicitly request every project
+    // name too: Canvas text is not enough to trigger a CSS font download.
+    const fontSample = PROJECTS.map(project => `${project.name} ${project.type}`).join(' ');
+    const fontsReady = document.fonts
+      ? Promise.all([
+          document.fonts.load('400 16px "Portfolio Songti"', fontSample),
+          document.fonts.load('500 16px "Portfolio Songti"', fontSample),
+          document.fonts.load('700 100px "Portfolio Songti"', 'LXY'),
+        ])
+      : Promise.resolve();
     const fontFallback = setTimeout(startEntry, 700);
-    (document.fonts?.ready ?? Promise.resolve())
-      .then(startEntry)
-      .catch(startEntry);
+    fontsReady.then(() => {
+      if (disposed) return;
+      if (!tl) startEntry();
+      else {
+        wordSheet.build();
+        styleMeta();
+        rasterText();
+      }
+      codeField.invalidate();
+    }).catch(startEntry);
 
     /* 本站适配：参考站的 lil-gui 调试面板（ring/gui.js）未移植，
        dev 控件（变量、G 键监听、NODE_ENV 动态导入）整段移除；

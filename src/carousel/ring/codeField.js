@@ -36,7 +36,7 @@ export function sampleHaloOverlap(x, y, halos) {
   return edge * edge * (3 - 2 * edge);
 }
 
-const SONGTI = '"Songti SC", "SimSun", "STSong", "Noto Serif SC", serif';
+const SONGTI = '"Portfolio Songti", "Songti SC", "SimSun", "STSong", "Noto Serif SC", serif';
 
 export function fitMonogram(context, { x, y, radius }) {
   context.font = `700 100px ${SONGTI}`;
@@ -59,7 +59,7 @@ export function fitMonogram(context, { x, y, radius }) {
 
 export function createCodeField(canvas) {
   const context = canvas?.getContext('2d', { alpha: true });
-  if (!context) return { draw() {}, dispose() {} };
+  if (!context) return { draw() {}, invalidate() {}, dispose() {} };
   let width = 0;
   let height = 0;
   let lastFrame = -Infinity;
@@ -170,6 +170,7 @@ export function createCodeField(canvas) {
       context.restore();
       staticPainted = reducedMotion;
     },
+    invalidate() { geometryKey = ''; staticPainted = false; },
     dispose() {
       context.clearRect(0, 0, canvas.width, canvas.height);
       canvas.width = canvas.height = 0;

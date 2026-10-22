@@ -24,7 +24,13 @@ export default defineConfig({
     name: "site-canonical",
     transformIndexHtml(_html, context) {
       const path = context.path.replace(/index\.html$/, "");
-      return [{ tag: "link", attrs: { rel: "canonical", href: `https://www.lxymelo.xyz${path}` }, injectTo: "head" }];
+      return [
+        { tag: "link", attrs: { rel: "canonical", href: `https://www.lxymelo.xyz${path}` }, injectTo: "head" },
+        ...["latin", "ui"].map(subset => ({ tag: "link", attrs: {
+          rel: "preload", as: "font", type: "font/woff2", crossorigin: "anonymous",
+          href: `/fonts/songti-${subset}.woff2`,
+        }, injectTo: "head" as const })),
+      ];
     },
   }],
   // 自定义域名 www.lxymelo.xyz 根路径访问
