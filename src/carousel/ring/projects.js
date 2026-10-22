@@ -72,6 +72,7 @@ const ringProjects = RING_ORDER.map((slug) => {
     slug,
     // 卡片与 hero 的美术：项目封面（atlas 按此加载）
     file: p.cover,
+    aspect: p.coverSize ? p.coverSize.width / p.coverSize.height : undefined,
     name: p.title,
     type: TYPES[slug] ?? "设计",
     year: p.year,
@@ -87,6 +88,7 @@ const ringProjects = RING_ORDER.map((slug) => {
         src: isVideo ? p.cover : m.src,
         shape: isVideo ? "wide" : SHAPE_OVERRIDES[m.src] ?? "land",
         caption: m.alt,
+        aspect: m.width && m.height ? m.width / m.height : undefined,
         heading: m.heading,
         description: m.description,
         layout: m.layout,

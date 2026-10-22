@@ -14,7 +14,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
         <article className="mpa-project">
           <header className="mpa-project-hero">
             <figure className="mpa-project-cover">
-              <img src={project.cover} alt={project.title} style={{ viewTransitionName: "project-cover" }} />
+              <img src={project.cover} width={project.coverSize?.width} height={project.coverSize?.height} alt={project.title} style={{ viewTransitionName: "project-cover" }} />
             </figure>
             <div className="mpa-project-intro">
               <p className="mpa-kicker">{project.kicker}</p>
@@ -57,9 +57,9 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
                   {item.type === "video" ? (
                     // 项目演示视频为无旁白的视觉短片
                     // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video src={item.src} controls playsInline preload="metadata" aria-label={item.alt} />
+                    <video src={item.src} width={item.width} height={item.height} controls playsInline preload="metadata" aria-label={item.alt} />
                   ) : (
-                    <img src={item.src} alt={item.alt} loading={index > 1 ? "lazy" : "eager"} />
+                    <img src={item.src} width={item.width} height={item.height} alt={item.alt} loading={index > 1 ? "lazy" : "eager"} />
                   )}
                   <figcaption className="project-media-caption">
                     <span className="case-number">{String(index + 1).padStart(2, "0")} / {item.type === "video" ? "FILM" : "DETAIL"}</span>

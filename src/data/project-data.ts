@@ -1,7 +1,9 @@
 import { withBase } from "../lib/base";
+import mediaDimensions from "./media-dimensions.json";
+const intrinsicSizes: Record<string, { width: number; height: number }> = mediaDimensions;
 import { projectStories, notesForMedia, type ProjectInsight, type MediaNote } from "./project-stories";
 
-export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string; notes?: ProjectInsight[] } & Partial<MediaNote>;
+export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string; width?: number; height?: number; notes?: ProjectInsight[] } & Partial<MediaNote>;
 
 export type AIProject = {
   slug: string;
@@ -9,6 +11,7 @@ export type AIProject = {
   kicker: string;
   year: string;
   cover: string;
+  coverSize?: { width: number; height: number };
   summary: string;
   roles: string[];
   insights?: ProjectInsight[];
@@ -154,8 +157,9 @@ export const projects: Record<string, AIProject> = Object.fromEntries(
     {
       ...p,
       cover: withBase(p.cover),
+      coverSize: intrinsicSizes[p.cover],
       insights: projectStories[key]?.insights ?? [],
-      media: p.media.map((m, index) => ({ ...m, ...projectStories[key]?.mediaNotes[index], notes: notesForMedia(key, index, p.media.length), src: withBase(m.src) })),
+      media: p.media.map((m, index) => ({ ...m, ...intrinsicSizes[m.src], ...projectStories[key]?.mediaNotes[index], notes: notesForMedia(key, index, p.media.length), src: withBase(m.src) })),
     },
   ]),
 );

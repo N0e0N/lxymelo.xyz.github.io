@@ -1,0 +1,274 @@
+{
+  "/projects/ai-education-symposium/01.jpg": {
+    "width": 1800,
+    "height": 1200
+  },
+  "/projects/ai-education-symposium/02.jpg": {
+    "width": 1800,
+    "height": 1012
+  },
+  "/projects/ai-education-symposium/03.jpg": {
+    "width": 1800,
+    "height": 1200
+  },
+  "/projects/ai-education-symposium/04.jpg": {
+    "width": 1800,
+    "height": 1349
+  },
+  "/projects/ai-education-symposium/05.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/ai-education-symposium/06.jpg": {
+    "width": 1800,
+    "height": 1183
+  },
+  "/projects/ai-education-symposium/07.jpg": {
+    "width": 1800,
+    "height": 1200
+  },
+  "/projects/ai-education-symposium/demo.mp4": {
+    "width": 1920,
+    "height": 1080
+  },
+  "/projects/creatorthon/01.jpg": {
+    "width": 1104,
+    "height": 1800
+  },
+  "/projects/creatorthon/02.jpg": {
+    "width": 1800,
+    "height": 1012
+  },
+  "/projects/creatorthon/03.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/creatorthon/04.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/creatorthon/05.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/creatorthon/06.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/design-ai-playbook/01.jpg": {
+    "width": 1137,
+    "height": 1800
+  },
+  "/projects/design-ai-playbook/02.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/design-ai-playbook/03.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/design-ai-playbook/04.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/design-ai-playbook/05.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/design-ai-playbook/06.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/design-ai-playbook/07.jpg": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/projects/echo-of/01.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/02.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/03.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/04.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/05.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/06.jpg": {
+    "width": 800,
+    "height": 450
+  },
+  "/projects/echo-of/demo.mp4": {
+    "width": 1440,
+    "height": 1440
+  },
+  "/projects/moocer/01.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "/projects/moocer/02.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "/projects/moocer/03.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "/projects/negative-space/demo.mp4": {
+    "width": 1280,
+    "height": 720
+  },
+  "/projects/negative-space/page-10.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-11.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-12.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-13.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-14.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-15.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-16.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-5.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-7.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/negative-space/page-9.jpg": {
+    "width": 2436,
+    "height": 1025
+  },
+  "/projects/research-agent/01.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/02.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/03.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/04.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/05.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/06.jpg": {
+    "width": 1800,
+    "height": 900
+  },
+  "/projects/research-agent/demo.mp4": {
+    "width": 1280,
+    "height": 720
+  },
+  "/projects/special-vehicle-hmi/01-use-scenario.jpg": {
+    "width": 2400,
+    "height": 1394
+  },
+  "/projects/special-vehicle-hmi/02-design-definition.jpg": {
+    "width": 2400,
+    "height": 1350
+  },
+  "/projects/special-vehicle-hmi/03-page-flow.jpg": {
+    "width": 2400,
+    "height": 1394
+  },
+  "/projects/special-vehicle-hmi/04-ui-kit.jpg": {
+    "width": 2400,
+    "height": 1596
+  },
+  "/projects/special-vehicle-hmi/05-high-fidelity-overview.jpg": {
+    "width": 2400,
+    "height": 1350
+  },
+  "/projects/special-vehicle-hmi/06-high-fidelity.jpg": {
+    "width": 2400,
+    "height": 1411
+  },
+  "/projects/special-vehicle-hmi/07-design-style.jpg": {
+    "width": 2400,
+    "height": 1350
+  },
+  "/projects/special-vehicle-hmi/demo.mp4": {
+    "width": 1280,
+    "height": 720
+  },
+  "/ai-builder/ai-education-symposium.jpg": {
+    "width": 1350,
+    "height": 1800
+  },
+  "/ai-builder/creatorthon.jpg": {
+    "width": 1350,
+    "height": 1800
+  },
+  "/ai-builder/design-ai-playbook.jpg": {
+    "width": 1350,
+    "height": 1800
+  },
+  "/ai-builder/echo-of.jpg": {
+    "width": 1350,
+    "height": 1800
+  },
+  "/ai-builder/moocer.jpg": {
+    "width": 1086,
+    "height": 1448
+  },
+  "/ai-builder/research-agent.jpg": {
+    "width": 1350,
+    "height": 1800
+  },
+  "/designer/negative-space.jpg": {
+    "width": 1800,
+    "height": 2400
+  },
+  "/designer/special-vehicle-hmi.jpg": {
+    "width": 1800,
+    "height": 2400
+  },
+  "/about/About.png": {
+    "width": 2629,
+    "height": 701
+  },
+  "/about/ME.png": {
+    "width": 3970,
+    "height": 2254
+  },
+  "/about/about-me.jpg": {
+    "width": 2000,
+    "height": 1125
+  }
+}

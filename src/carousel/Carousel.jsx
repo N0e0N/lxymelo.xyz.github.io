@@ -568,7 +568,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const gap = Math.max(24, viewW * 0.04);
       const cell = detailCell;
       const project = PROJECTS[cell];
-      const heroAspect = mediaAspects.get(project?.video) ?? mediaAspects.get(project?.file) ?? params.planeAspect;
+      const heroAspect = mediaAspects.get(project?.video) ?? mediaAspects.get(project?.file) ?? project?.aspect ?? params.planeAspect;
       const h = Math.min((stacked ? w : w * 0.44) / heroAspect, viewH * (viewW <= 640 ? 0.52 : 0.72));
       const heroW = h * heroAspect;
       openRect.w = heroW;
@@ -773,9 +773,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         if (!box) continue;
         const aspect = Number(box.style.aspectRatio);
         if (aspect > 0) {
-          box.style.maxWidth = viewW <= 640 ? "100%" : `${viewH * 0.78 * aspect}px`;
+          box.style.maxWidth = "100%";
           box.style.width = "100%";
-          box.style.justifySelf = "center";
+          box.style.justifySelf = "start";
         }
       }
       const g = endNow() * fit;
@@ -1276,9 +1276,9 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
             mediaAspects.set(items[k].src, img.width / img.height);
             const aspect = mediaAspects.get(items[k].video) ?? img.width / img.height;
             box.style.aspectRatio = String(aspect);
-            box.style.maxWidth = `${viewH * 0.78 * aspect}px`;
+            box.style.maxWidth = "100%";
             box.style.width = "100%";
-            box.style.justifySelf = "center";
+            box.style.justifySelf = "start";
           }
           ctx.drawImage(img, 0, 0, img.width, img.height,
             (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch);
@@ -1432,7 +1432,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
           box.style.maxWidth = "";
           box.style.width = "";
           box.style.justifySelf = "";
-          box.style.aspectRatio = String(mediaAspects.get(m.video) ?? mediaAspects.get(m.src) ?? 1);
+          box.style.aspectRatio = String(mediaAspects.get(m.video) ?? mediaAspects.get(m.src) ?? m.aspect ?? 1);
           box.dataset.cell = String(imageCount + k);
           box.dataset.video = m.video ?? "";
           box.setAttribute("aria-label", `${p.name}: ${m.caption}`);
@@ -3293,6 +3293,16 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       uniforms.uSheen.value = on ? params.sheen : 0;
     };
 
+    let detailLayoutDirty = false;
+    const detailResizeObserver = new ResizeObserver(() => { detailLayoutDirty = true; });
+    if (openEls.body) detailResizeObserver.observe(openEls.body);
+    for (const box of openEls.boxes) if (box) detailResizeObserver.observe(box);
+    for (const figure of openEls.figs) {
+      if (figure) detailResizeObserver.observe(figure);
+      const caption = figure?.querySelector("figcaption");
+      if (caption) detailResizeObserver.observe(caption);
+    }
+
     /* ------------------------------------------------------- entry timeline */
     // Bumped per build, so a hold left waiting on a run that has since been
     // replaced cannot resume a timeline nobody is watching.
@@ -3639,6 +3649,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         }
       }
 
+      if (detailLayoutDirty && openI >= 0 && !advancing) {
+        detailLayoutDirty = false;
+        measurePage();
+        rasterText();
+      }
       tickLoader(dt);
       updatePointer(dt);
       layout(dt);
@@ -3691,6 +3706,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);
       codeField.dispose();
+      detailResizeObserver.disconnect();
 
       window.removeEventListener("resize", onResize);
       container.removeEventListener("wheel", onWheel);

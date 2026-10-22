@@ -819,7 +819,7 @@ button, a { touch-action: manipulation; }
 
 /* Case studies: readable screenshots, concise notes, consistent captions. */
 .case-study-page { max-width: 1320px; padding-top: 8.5rem; }
-.case-study-page .mpa-project-hero { gap: clamp(28px, 5vw, 80px); align-items: center; }
+.case-study-page .mpa-project-hero { gap: clamp(28px, 5vw, 80px); align-items: start; }
 .case-study-page .mpa-title { font-size: clamp(32px, 4vw, 58px); line-height: 1.3; margin-bottom: 20px; text-wrap: balance; }
 .case-study-page .mpa-project-cover img { border-radius: 4px; }
 .case-study-page .mpa-roles { margin: 24px 0; gap: 8px; }
@@ -892,7 +892,7 @@ button, a { touch-action: manipulation; }
 .case-study-page .mpa-gallery, .project-overlay .media { max-width: 1200px; width: 100%; row-gap: clamp(56px, 7vw, 104px); }
 .case-study-page .case-media-row,
 .project-overlay .media-fig[data-slot][data-reading-layout] {
-  grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); column-gap: clamp(28px, 4vw, 64px); align-items: center; margin: 0;
+  grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); column-gap: clamp(28px, 4vw, 64px); align-items: start; margin: 0;
 }
 .case-study-page .case-media-row > img,
 .case-study-page .case-media-row > video,
@@ -923,8 +923,9 @@ button, a { touch-action: manipulation; }
 .mpa-next:hover .mpa-next-arrow { transform: translate(5px, -5px); }
 .mpa-next:hover .mpa-next-art img { transform: scale(1.03); }
 @media (max-width: 800px) {
+  .case-study-page .mpa-gallery { grid-template-columns: minmax(0, 1fr); }
   .case-study-page .case-media-row,
-  .project-overlay .media-fig[data-slot][data-reading-layout] { grid-template-columns: 1fr; gap: 24px; }
+  .project-overlay .media-fig[data-slot][data-reading-layout] { grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
   .case-study-page .case-media-row .project-media-caption,
   .project-overlay .media-fig .project-media-caption { grid-column: 1; grid-row: 1; }
   .case-study-page .case-media-row > img,
@@ -954,3 +955,10 @@ button, a { touch-action: manipulation; }
   .mpa-header .mpa-logo { gap: 7px; }
   .mpa-logo-portrait { width: 24px; height: 32px; }
 }
+
+/* Every process row shares one top edge; intrinsic media sizes reserve space. */
+.case-study-page .case-media-row > img,
+.case-study-page .case-media-row > video,
+.project-overlay .media-fig .media-box { align-self: start; justify-self: start; margin: 0; }
+.project-overlay .media-box > .detail-video { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.project-media-caption .case-number { line-height: 1; }
