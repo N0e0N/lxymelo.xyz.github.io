@@ -158,10 +158,10 @@ export function createCodeField(canvas) {
         const cycle = Math.floor(time * 0.8 + cell.seed);
         const changing = !reducedMotion && noise(cell.seed + 13) > 0.86;
         const glyph = changing ? GLYPHS[Math.floor(noise(cycle) * GLYPHS.length)] : cell.glyph;
-        context.fillStyle = `rgba(158, 240, 107, ${ink * 0.95})`;
+        context.fillStyle = `rgba(0, 0, 0, ${ink * 0.95})`;
         context.fillText(glyph, cell.x, cell.y);
         if (ink > 0.6) {
-          context.fillStyle = `rgba(208, 255, 155, ${(ink - 0.6) * 1.1})`;
+          context.fillStyle = `rgba(0, 0, 0, ${(ink - 0.6) * 1.1})`;
           context.fillText(glyph, cell.x, cell.y - 0.5);
         }
       }
