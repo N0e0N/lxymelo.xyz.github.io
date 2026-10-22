@@ -947,3 +947,10 @@ button, a { touch-action: manipulation; }
 .home-help > .home-back { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 10px 20px; border: 1px solid var(--hairline); border-radius: 999px; font-family: var(--f-body); font-size: 15px; background: var(--paper); -webkit-appearance: none; appearance: none; box-shadow: 0 3px 14px rgb(22 20 15 / 5%); }
 .home-help > .home-back:hover { text-decoration: none; background: var(--ink); color: var(--paper); }
 @media (max-width: 640px) { .home-help > .home-back { border-radius: 999px; font-size: 14px; min-width: 86px; padding: 9px 18px; } }
+
+.mpa-header .mpa-logo { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.mpa-logo-portrait { display: block; width: 32px; height: 38px; object-fit: contain; flex-shrink: 0; }
+@media (max-width: 640px) {
+  .mpa-header .mpa-logo { gap: 7px; }
+  .mpa-logo-portrait { width: 24px; height: 32px; }
+}

@@ -12,7 +12,10 @@ export const PageHeader = () => (
   <>
     <a className="skip-link" href="#main-content">跳至正文</a>
     <header className="mpa-header">
-      <a href={withBase("/")} className="mpa-logo" aria-label="LXY.MELO 首页">LXY.MELO</a>
+      <a href={withBase("/")} className="mpa-logo" aria-label="LXY.MELO 首页">
+        <img className="mpa-logo-portrait" src={withBase("/icons/favicon-64.png")} alt="" aria-hidden="true" width={32} height={38} />
+        <span>LXY.MELO</span>
+      </a>
       <SiteNav />
     </header>
   </>
