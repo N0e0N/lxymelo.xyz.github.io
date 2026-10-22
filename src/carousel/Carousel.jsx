@@ -1237,6 +1237,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
     const more = { mix: 0 };
     let moreTex = null;
     let moreGen = 0;
+    let moreDirty = false;
+    let moreUploadAt = -Infinity;
 
     const loadMore = (items) => {
       const gen = ++moreGen;
@@ -1259,51 +1261,53 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       const fit = Math.min(1, maxTex / (cw * cols), maxTex / (ch * rows));
       cw = Math.floor(cw * fit);
       ch = Math.floor(ch * fit);
-      // 本站适配：媒体只有一份全尺寸图，无 /sm 缩略副本，按 projects.js
-      // 给出的全路径直接加载。
-      Promise.all(
-        items.map((m) => m.video ? Promise.resolve(null) : loadImage(m.src, "high").catch(() => null)),
-      ).then((imgs) => {
-        if (disposed || gen !== moreGen) return;
-        const canvas = document.createElement("canvas");
-        canvas.width = cw * cols;
-        canvas.height = ch * rows;
-        const ctx = canvas.getContext("2d");
-        imgs.forEach((img, k) => {
-          if (!img) return;
-          const box = openTextRef.current.boxes[k];
-          if (box) {
-            mediaAspects.set(items[k].src, img.width / img.height);
-            const aspect = mediaAspects.get(items[k].video) ?? img.width / img.height;
-            box.style.aspectRatio = String(aspect);
-            box.style.maxWidth = "100%";
-            box.style.width = "100%";
-            box.style.justifySelf = "start";
-          }
+      // Paint arrivals progressively: a slow last image must not hold up
+      // every earlier one. Three workers leave bandwidth for the hero/fonts.
+      const canvas = document.createElement("canvas");
+      canvas.width = cw * cols;
+      canvas.height = ch * rows;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#f2efe9";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      moreTex?.dispose();
+      const t = new THREE.CanvasTexture(canvas);
+      t.flipY = false;
+      t.colorSpace = THREE.NoColorSpace;
+      t.wrapS = THREE.ClampToEdgeWrapping;
+      t.wrapT = THREE.ClampToEdgeWrapping;
+      t.minFilter = THREE.LinearMipmapLinearFilter;
+      t.magFilter = THREE.LinearFilter;
+      t.generateMipmaps = true;
+      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      moreTex = t;
+      uniforms.uMore.value = t;
+      moreDirty = false;
+      moreUploadAt = -Infinity;
+      let next = 0;
+      let started = false;
+      const worker = async () => {
+        while (!disposed && gen === moreGen && next < n) {
+          const k = next++;
+          const item = items[k];
+          if (item.video) continue;
+          const img = await loadImage(item.src, k === 0 ? "auto" : "low").catch(() => null);
+          if (disposed || gen !== moreGen) return;
+          if (!img) continue;
           ctx.drawImage(img, 0, 0, img.width, img.height,
             (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch);
-        });
-        styleOpen();
-        rasterText();
-        moreTex?.dispose();
-        const t = new THREE.CanvasTexture(canvas);
-        t.flipY = false;
-        t.colorSpace = THREE.NoColorSpace;
-        t.wrapS = THREE.ClampToEdgeWrapping;
-        t.wrapT = THREE.ClampToEdgeWrapping;
-        t.minFilter = THREE.LinearMipmapLinearFilter;
-        t.magFilter = THREE.LinearFilter;
-        t.generateMipmaps = true;
-        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        t.needsUpdate = true;
-        moreTex = t;
-        uniforms.uMore.value = t;
-        gsap.to(more, { mix: 1, duration: 0.6, ease: "power1.inOut" });
-      });
+          moreDirty = true;
+          if (!started) {
+            started = true;
+            gsap.to(more, { mix: 1, duration: 0.6, ease: "power1.inOut" });
+          }
+        }
+      };
+      for (let i = 0; i < Math.min(3, n); i++) void worker();
     };
 
     const dropMore = () => {
       moreGen++;
+      moreDirty = false;
       gsap.killTweensOf(more);
       more.mix = 0;
       uniforms.uMore.value = moreBlank;
@@ -1321,6 +1325,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       video.hidden = !src;
       video.removeAttribute("src");
       if (!src) { video.load(); return; }
+      video.preload = "none";
       video.poster = poster;
       video.setAttribute("aria-label", label);
       video.src = src;
@@ -3654,6 +3659,13 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         measurePage();
         rasterText();
       }
+      // Batch atlas uploads instead of re-uploading the full sheet per image.
+      if (moreDirty && moreTex && now - moreUploadAt >= 150) {
+        moreTex.needsUpdate = true;
+        moreDirty = false;
+        moreUploadAt = now;
+        needsRender = true;
+      }
       tickLoader(dt);
       updatePointer(dt);
       layout(dt);
@@ -3937,7 +3949,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
             <video
               ref={(el) => { openTextRef.current.heroVideo = el; }}
               className="detail-video detail-hero-video"
-              controls playsInline preload="metadata" hidden
+              controls playsInline preload="none" hidden
             />
             <div className="open-info" style={{ marginLeft: "var(--x-info)", width: "var(--w-info)" }}>
             <div
@@ -4051,7 +4063,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
                     data-gl="img"
                     className="media-box"
                   >
-                    <video className="detail-video" controls playsInline preload="metadata" hidden />
+                    <video className="detail-video" controls playsInline preload="none" hidden />
                   </div>
                   <figcaption className="project-media-caption"><span className="case-number" /><div className="case-media-notes" /></figcaption>
                 </figure>
