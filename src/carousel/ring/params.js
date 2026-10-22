@@ -97,6 +97,9 @@ export function defaultParams() {
     tightCard: 0.68, // the front card's width at rest, of the window's
     tightSpacing: 0.68, // its neighbours' distance from it, of the window's height
     tightSplit: 0.8, // the heading, competing with the ring for centre screen
+    tightMotion: 0.55, // gentler drift on phones, including without a pointer
+    tightThread: 0.65, // narrow liquid joins while dragging, keeping covers distinct
+    tightMelt: 0.45,
 
     // -- geometry, all at the reference window ---------------------------
     // 本站适配：竖卡比例（宽/高），长边为高；见文件顶 PLANE_ASPECT

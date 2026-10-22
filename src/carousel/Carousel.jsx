@@ -2163,11 +2163,11 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         cursor.x,
         cursor.y,
         cursor.amt,
-        tightNow ? 0 : params.melt * fit,
+        params.melt * fit * (tightNow ? params.tightMelt : 1),
       );
       uniforms.uMelt.value.set(
         params.meltReach * fit,
-        tightNow ? 0 : params.wave * fit * cursor.wake * cursor.amt,
+        params.wave * fit * cursor.wake * cursor.amt * (tightNow ? params.tightMelt : 1),
         params.waveFreq,
         params.waveSpeed,
       );
@@ -2552,7 +2552,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
       order.length = 0;
 
-      const track = !tightNow && cursor.amt > 0.001;
+      const track = cursor.amt > 0.001;
       const reach = Math.max(1, params.reach * W);
       const sideReach = Math.max(1, params.sideReach * W);
       // Asymmetric on purpose: the ring takes up a lean quickly and lets go
@@ -2751,9 +2751,10 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
 
         const motion = cardMotion[i];
         const motionTime = uniforms.uTime.value * motion.speed + motion.phase;
-        const motionWeight = motionQuery?.matches || openI >= 0 || picking || tightNow
+        const motionWeight = motionQuery?.matches || openI >= 0 || picking
           ? 0
-          : smoothstep(0.9, 1, spread) * (0.15 + scrollAdhesion * 0.85);
+          : smoothstep(0.9, 1, spread) * ((tightNow ? 0.3 : 0.15) + scrollAdhesion * 0.85) *
+            (tightNow ? params.tightMotion * (1 - shift * 0.5) : 1);
         const amplitude = W * 0.18 * motion.amplitude * motionWeight;
         const driftX = Math.sin(motionTime * 1.13) * amplitude;
         const driftY = Math.sin(motionTime * 0.79 + motion.phase) * amplitude;
@@ -3124,7 +3125,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       // never merged, so there is nothing between them to stretch.
       order.sort(bySlot);
 
-      const edgeHalf = faceEdge * 0.5 * params.thread;
+      const edgeHalf = faceEdge * 0.5 * params.thread * (tightNow ? params.tightThread : 1);
       // Once closed the seam pair are neighbours like any other, and without a
       // link the one gap the fan never opened is the only one the cursor
       // cannot web back together.
@@ -3208,7 +3209,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         const ripple = random.ripple;
         const strand = random.strength;
         const scrollWeb = closed && openI < 0
-          ? scrollAdhesion * (0.12 + 0.25 * ripple) * strand
+          ? scrollAdhesion * (tightNow ? 0.2 + 0.4 * ripple : 0.12 + 0.25 * ripple) * strand
           : 0;
         let w = Math.max(
           Math.pow(1 - v, params.thin),
@@ -3233,7 +3234,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         // dissolve carries the radius past zero and out of antialiasing range
         // so the thread fades instead of bottoming out as a half-covered
         // hairline. In screen px, so unlike edgeHalf it does not carry g.
-        const rEnd = edgeHalf * w - params.dissolve;
+        const rEnd = edgeHalf * w - params.dissolve * (tightNow ? 0.45 : 1);
         const neckVariation = 1 - scrollAdhesion * strand * (0.15 + 0.3 * flow);
         const rMid = rEnd * (1 - (1 - params.pinch) * smoothstep(0, 0.7, v)) * neckVariation;
 
@@ -3255,8 +3256,8 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       for (let l = linkCount; l < MAX_LINKS; l++) {
         uniforms.uLinkPar.value[l].set(-100, -100, 0, 0);
       }
-      // Small screens need discrete cards, including while dragging.
-      uniforms.uLinkCount.value = tightNow ? 0 : linkCount;
+      // Phones keep thinner joins rather than disabling the liquid material.
+      uniforms.uLinkCount.value = linkCount;
 
       // Both are px into the distance field, so they scale with the ring or
       // the merge reads as a different material at a different window size.
@@ -3273,7 +3274,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
         (params.goo * planeK * fit * gooK +
           params.openMelt * fit * pulse * openOut) *
         (advancing ? 0.1 : 1);
-      if (tightNow) uniforms.uK.value = Math.min(uniforms.uK.value, 2 * (1 - shift) + 0.6 * shift);
+      if (tightNow) uniforms.uK.value = Math.min(uniforms.uK.value, 14, shortEdge * 0.24);
       uniforms.uWobble.value =
         params.wobble * fit * (1 - smoothstep(0.2, 0.95, state.progress)) +
         params.openWobble * fit * pulse;
