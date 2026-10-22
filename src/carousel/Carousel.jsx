@@ -2366,7 +2366,7 @@ export default function Carousel({ paused = false, controlsRef, onViewChange, on
       }
     };
 
-    const haloSeeds = Array.from({ length: 7 }, () => Math.random() * 1000);
+    const haloSeeds = Array.from({ length: 10 }, () => Math.random() * 1000);
     const fieldHalos = haloSeeds.map(() => ({ x: 0, y: 0, rx: 1, ry: 1 }));
     const haloNoise = (t, seed) => {
       const n = Math.floor(t);

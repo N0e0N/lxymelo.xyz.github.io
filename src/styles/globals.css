@@ -110,10 +110,13 @@
     radial-gradient(ellipse at center, rgb(181 125 220 / 52%) 0%, transparent 65%),
     radial-gradient(ellipse at center, rgb(106 193 150 / 48%) 0%, transparent 65%),
     radial-gradient(ellipse at center, rgb(232 166 101 / 46%) 0%, transparent 65%),
+    radial-gradient(ellipse at center, rgb(103 211 194 / 43%) 0%, transparent 65%),
+    radial-gradient(ellipse at center, rgb(237 158 170 / 42%) 0%, transparent 65%),
+    radial-gradient(ellipse at center, rgb(147 161 231 / 44%) 0%, transparent 65%),
     var(--dither, none);
-  background-size: var(--halo-0-w, 34vmax) var(--halo-0-h, 28vmax), var(--halo-1-w, 30vmax) var(--halo-1-h, 36vmax), var(--halo-2-w, 26vmax) var(--halo-2-h, 32vmax), var(--halo-3-w, 38vmax) var(--halo-3-h, 28vmax), var(--halo-4-w, 32vmax) var(--halo-4-h, 40vmax), var(--halo-5-w, 28vmax) var(--halo-5-h, 34vmax), var(--halo-6-w, 30vmax) var(--halo-6-h, 24vmax), 64px 64px;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-position: var(--halo-0-x, 20%) var(--halo-0-y, 20%), var(--halo-1-x, 80%) var(--halo-1-y, 70%), var(--halo-2-x, 30%) var(--halo-2-y, 80%), var(--halo-3-x, 70%) var(--halo-3-y, 20%), var(--halo-4-x, 50%) var(--halo-4-y, 70%), var(--halo-5-x, 80%) var(--halo-5-y, 50%), var(--halo-6-x, 20%) var(--halo-6-y, 50%), 0 0;
+  background-size: var(--halo-0-w, 34vmax) var(--halo-0-h, 28vmax), var(--halo-1-w, 30vmax) var(--halo-1-h, 36vmax), var(--halo-2-w, 26vmax) var(--halo-2-h, 32vmax), var(--halo-3-w, 38vmax) var(--halo-3-h, 28vmax), var(--halo-4-w, 32vmax) var(--halo-4-h, 40vmax), var(--halo-5-w, 28vmax) var(--halo-5-h, 34vmax), var(--halo-6-w, 30vmax) var(--halo-6-h, 24vmax), var(--halo-7-w, 28vmax) var(--halo-7-h, 32vmax), var(--halo-8-w, 30vmax) var(--halo-8-h, 26vmax), var(--halo-9-w, 26vmax) var(--halo-9-h, 34vmax), 64px 64px;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-position: var(--halo-0-x, 20%) var(--halo-0-y, 20%), var(--halo-1-x, 80%) var(--halo-1-y, 70%), var(--halo-2-x, 30%) var(--halo-2-y, 80%), var(--halo-3-x, 70%) var(--halo-3-y, 20%), var(--halo-4-x, 50%) var(--halo-4-y, 70%), var(--halo-5-x, 80%) var(--halo-5-y, 50%), var(--halo-6-x, 20%) var(--halo-6-y, 50%), var(--halo-7-x, 65%) var(--halo-7-y, 35%), var(--halo-8-x, 35%) var(--halo-8-y, 65%), var(--halo-9-x, 60%) var(--halo-9-y, 80%), 0 0;
 }
 
 .open-next { margin: clamp(32px, 5vh, 64px) 0 32px; padding-top: 20px; }
