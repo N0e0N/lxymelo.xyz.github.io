@@ -12,11 +12,21 @@ const LINES = [
   'float field = smoothstep(0.1, 0.8, energy);',
   'design.connect(technology).then(create);',
 ];
-const GLYPHS = '01{}[]<>/;:+=.*_()';
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789{}[]<>/;:+=.*_()';
 const noise = (n) => {
   const value = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return value - Math.floor(value);
 };
+
+// Each cell changes independently, roughly three times per second. Some
+// cycles restore the source code so the field still has readable fragments.
+export function codeGlyphAt(cell, time, reducedMotion = false) {
+  if (reducedMotion) return cell.glyph;
+  const rate = 2.4 + noise(cell.seed + 17) * 1.2;
+  const cycle = Math.floor(time * rate + noise(cell.seed + 5));
+  const value = noise(cycle * 13.7 + cell.seed * 0.19);
+  return value < 0.22 ? cell.glyph : GLYPHS[Math.floor(noise(cycle * 29.3 + cell.seed) * GLYPHS.length)];
+}
 
 // Requiring a second light keeps isolated halos free of decorative text.
 export function sampleHaloOverlap(x, y, halos) {
@@ -155,9 +165,7 @@ export function createCodeField(canvas) {
         const pulse = 0.18 + 0.82 * phase * phase;
         const ink = strength * pulse;
         if (ink < 0.035) continue;
-        const cycle = Math.floor(time * 0.8 + cell.seed);
-        const changing = !reducedMotion && noise(cell.seed + 13) > 0.86;
-        const glyph = changing ? GLYPHS[Math.floor(noise(cycle) * GLYPHS.length)] : cell.glyph;
+        const glyph = codeGlyphAt(cell, time, reducedMotion);
         context.fillStyle = `rgba(0, 0, 0, ${ink * 0.95})`;
         context.fillText(glyph, cell.x, cell.y);
         if (ink > 0.6) {
