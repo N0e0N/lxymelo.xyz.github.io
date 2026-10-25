@@ -27,9 +27,33 @@
     "width": 1800,
     "height": 1200
   },
+  "/projects/ai-education-symposium/ai-visual-process-poster.jpg": {
+    "width": 960,
+    "height": 544
+  },
+  "/projects/ai-education-symposium/ai-visual-process.mp4": {
+    "width": 960,
+    "height": 544
+  },
   "/projects/ai-education-symposium/demo.mp4": {
     "width": 1920,
     "height": 1080
+  },
+  "/projects/ai-education-symposium/theme-construction.jpg": {
+    "width": 1920,
+    "height": 1280
+  },
+  "/projects/ai-education-symposium/theme-intersection.jpg": {
+    "width": 1920,
+    "height": 1280
+  },
+  "/projects/ai-education-symposium/theme-practice.jpg": {
+    "width": 1920,
+    "height": 1280
+  },
+  "/projects/ai-education-symposium/theme-trend.jpg": {
+    "width": 1920,
+    "height": 1280
   },
   "/projects/creatorthon/01.jpg": {
     "width": 1104,

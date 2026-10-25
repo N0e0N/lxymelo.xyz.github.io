@@ -57,7 +57,7 @@ const AIProjectPage = ({ project }: { project: AIProject }) => {
                   {item.type === "video" ? (
                     // 项目演示视频为无旁白的视觉短片
                     // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video src={item.src} width={item.width} height={item.height} style={{ aspectRatio: item.width && item.height ? `${item.width} / ${item.height}` : undefined }} controls playsInline preload="none" poster={project.cover} aria-label={item.alt} />
+                    <video src={item.src} width={item.width} height={item.height} style={{ aspectRatio: item.width && item.height ? `${item.width} / ${item.height}` : undefined }} controls playsInline preload="none" poster={item.poster ?? project.cover} aria-label={item.alt} />
                   ) : (
                     <img src={item.src} width={item.width} height={item.height} alt={item.alt} loading="lazy" decoding="async" />
                   )}

@@ -85,7 +85,7 @@ const ringProjects = RING_ORDER.map((slug) => {
       return {
         // 参考站约定：src 是海报图，video 才是影片文件。
         // 本站视频媒体没有独立海报，用项目封面代替。
-        src: isVideo ? p.cover : m.src,
+        src: isVideo ? m.poster ?? p.cover : m.src,
         shape: isVideo ? "wide" : SHAPE_OVERRIDES[m.src] ?? "land",
         caption: m.alt,
         aspect: m.width && m.height ? m.width / m.height : undefined,

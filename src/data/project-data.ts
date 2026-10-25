@@ -3,7 +3,7 @@ import mediaDimensions from "./media-dimensions.json";
 const intrinsicSizes: Record<string, { width: number; height: number }> = mediaDimensions;
 import { projectStories, notesForMedia, type ProjectInsight, type MediaNote } from "./project-stories";
 
-export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string; width?: number; height?: number; notes?: ProjectInsight[] } & Partial<MediaNote>;
+export type ProjectMedia = { src: string; type?: "image" | "video"; alt: string; width?: number; height?: number; poster?: string; notes?: ProjectInsight[] } & Partial<MediaNote>;
 
 export type AIProject = {
   slug: string;
@@ -72,12 +72,18 @@ const rawProjects: Record<string, AIProject> = {
     kicker: "AI BUILDER / SYMPOSIUM",
     year: "2025",
     cover: "/ai-builder/ai-education-symposium.jpg",
-    summary: "围绕人工智能的跨学科交叉、教学实验与产教融合展开的教育研讨会，并以“交叉、趋势、实践、建设”形成完整视觉系统。",
-    roles: ["Event Identity", "AI Education", "Visual System"],
+    summary: "2025 年 7 月 25—26 日，由同济大学设计创意学院主办、设计人工智能实验室承办，200 余人线下参与。围绕“交叉、趋势、实践、建设”，汇聚学界与业界，共议 AI 与设计教育结合的痛点、难点与机会，回顾教学工具革新与学科边界重构。",
+    roles: ["Event Identity", "AI-assisted Design", "Visual System"],
     media: [
-      { src: "/projects/ai-education-symposium/01.jpg", alt: "研讨会现场大合照" },
-      { src: "/projects/ai-education-symposium/demo.mp4", type: "video", alt: "设计人工智能教育创新研讨会演示视频" },
-      ...images("ai-education-symposium", 7, "研讨会视觉与现场").slice(1),
+      { src: "/projects/ai-education-symposium/ai-visual-process.mp4", type: "video", poster: "/projects/ai-education-symposium/ai-visual-process-poster.jpg", alt: "借助 AI 搭建大会视觉生成工具的过程演示" },
+      { src: "/projects/ai-education-symposium/01.jpg", alt: "设计人工智能教育创新研讨会现场大合照" },
+      { src: "/projects/ai-education-symposium/02.jpg", alt: "大会胸牌、邀请函与手提袋等视觉物料" },
+      { src: "/projects/ai-education-symposium/theme-intersection.jpg", alt: "交叉主题：人工智能的跨文化融合，绿色舞台主视觉" },
+      { src: "/projects/ai-education-symposium/theme-trend.jpg", alt: "趋势主题：人工智能的跨学科交叉，红色舞台主视觉" },
+      { src: "/projects/ai-education-symposium/theme-practice.jpg", alt: "实践主题：设计人工智能教学实验，紫色舞台主视觉" },
+      { src: "/projects/ai-education-symposium/theme-construction.jpg", alt: "建设主题：设计人工智能产教融合，黑白舞台主视觉" },
+      { src: "/projects/ai-education-symposium/demo.mp4", type: "video", alt: "大会动态视觉展示" },
+      ...images("ai-education-symposium", 7, "研讨会视觉与现场").slice(2),
     ],
     external: [{ label: "VIEW ARTICLE", href: "https://mp.weixin.qq.com/s/cYiusTWXHL_o6ZVURqrOQQ" }],
     next: "creatorthon",
@@ -159,7 +165,7 @@ export const projects: Record<string, AIProject> = Object.fromEntries(
       cover: withBase(p.cover),
       coverSize: intrinsicSizes[p.cover],
       insights: projectStories[key]?.insights ?? [],
-      media: p.media.map((m, index) => ({ ...m, ...intrinsicSizes[m.src], ...projectStories[key]?.mediaNotes[index], notes: notesForMedia(key, index, p.media.length), src: withBase(m.src) })),
+      media: p.media.map((m, index) => ({ ...m, ...intrinsicSizes[m.src], ...projectStories[key]?.mediaNotes[index], notes: notesForMedia(key, index, p.media.length), poster: m.poster ? withBase(m.poster) : undefined, src: withBase(m.src) })),
     },
   ]),
 );
